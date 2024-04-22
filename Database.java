@@ -31,7 +31,7 @@ public class Database {
                 System.out.println("ID: " + id + ", Description: " + description);
             }
 
-            // Close resources
+            // Exit resources
             resultSet.close();
             statement.close();
             connection.close();
