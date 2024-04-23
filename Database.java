@@ -8,7 +8,7 @@ public class Database {
         String password = "";
 
         // SQL query
-        String query = "SELECT * FROM orderlines WHERE OrderLineID = 1";
+        String query = "SELECT * FROM orderlines";
 
         try {
             // Establish connection
