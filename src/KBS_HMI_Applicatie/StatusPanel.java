@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.net.http.HttpResponse;
 
 public class StatusPanel extends JPanel{
     private GUIThemes guiTheme;

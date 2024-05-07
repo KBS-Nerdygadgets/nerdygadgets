@@ -11,6 +11,7 @@ public class SerialPanel extends JPanel{
     private JButton connectionButton, settingsButton;
     private JComboBox<String> startButton;
     private JPanel serialStatus;
+    
     public SerialPanel(Dimension screenDimension){
         this.screenDimension = screenDimension;
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast

@@ -11,6 +11,7 @@ public class OrderPanel extends JPanel{
     private JPanel ordersPanel, buttonsPanel, managebuttonPanel, startbuttonPanel;
     private JButton manageOrderButton, startOrderButton;
     private JLabel orderLabel, orders;
+    
     public OrderPanel(Dimension screenDimension){
         this.screenDimension = screenDimension;
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast

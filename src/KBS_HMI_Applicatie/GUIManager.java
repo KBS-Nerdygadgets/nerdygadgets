@@ -15,13 +15,13 @@ public class GUIManager extends JFrame {
         Dimension lrPanelDimension = new Dimension(dimension.width/2-7, dimension.height-50);
 
         //Past het Frame aan
-        setTitle("HMI");
+        setTitle("Magazijnrobot");
         setSize(dimension);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         setBackground(darkGray);
-        ImageIcon hasbulla = new ImageIcon("src/KBS_HMI_Applicatie/Icons/hasbie.jpeg");
-        setIconImage(hasbulla.getImage());
+        ImageIcon windesheim = new ImageIcon("src/KBS_HMI_Applicatie/Icons/windesheim.png");
+        setIconImage(windesheim.getImage());
 
         //De verschillende panelen worden aangemaakt
         scmPanel = new SerialPanel(new Dimension(dimension.width, 65));

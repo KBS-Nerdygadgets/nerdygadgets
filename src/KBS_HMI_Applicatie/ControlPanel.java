@@ -11,6 +11,7 @@ public class ControlPanel extends JPanel{
     private GridPoint robotLocation;
     private JPanel topPanel, topPanelGrid, bottomPanelBottom, bottomPanelTop;
     private JLabel schapLabel, robotLocationLabel, unvisitedProductLabel, robotPathLabel, fetchedProductLabel, legendLabel;
+    
     public ControlPanel(Dimension screenDimension){
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast
         Color darkGray = new Color(51, 51, 51);

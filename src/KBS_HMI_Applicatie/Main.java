@@ -4,6 +4,6 @@ import java.awt.*;
 
 public class Main {
     public static void main(String[] args) {
-        GUIManager manager = new GUIManager(new Dimension(1000, 700));
+        new GUIManager(new Dimension(1000, 700));
     }
 }
