@@ -11,26 +11,47 @@ byte chPos = 0;
 sendmessageMillis = 0
 //seriele communicatie end
 
+//Motorpin voor motor x-as
 int pwmA = 3;
 int dirA = 12;
 
+//Motorpin voor motor y-as
 int pwmB = 11;
 int dirB = 13;
 
+//De assen van de joystick
 int xValue = 0; // To store value of the X axis
 int yValue = 0; // To store value of the Y axis
+
+//Pins van de microswitches, ms = microswitch
+int msBeneden = A4;
+int msBoven =  A5;
+
+//Pins van de inductive (metaal)sensoren, ind = inductive
+int indLinks = 5;
+int indRechts = 6;
 
 String richting = "";
 
 void setup() {
-  TCCR2B = TCCR2B & B11111000 | B00000110; // for PWM frequency of 122.55 Hz
+    TCCR2B = TCCR2B & B11111000 | B00000110; // for PWM frequency of 122.55 Hz
   // TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30.64 Hz
-
+  //pinMode motoren
   pinMode(pwmA, OUTPUT);
   pinMode(dirA, OUTPUT);
   pinMode(pwmB, OUTPUT);
   pinMode(dirB, OUTPUT);
+
+  //pinMode microswitches
+  pinMode(msBeneden, INPUT);
+  pinMode(msBoven, INPUT);
+
+  //pinMode inductive (metaal)sensoren
+  pinMode(indLinks, INPUT);
+  pinMode(indRechts, INPUT);
+
   Serial.begin(9600) ;
+
 
   //seriele communicatie
   link.begin(9600);
@@ -43,6 +64,8 @@ void loop() {
   leesJoystick();
   geefRichting();
   handmatigBewegen();
+  leesMicroSwitches();
+  leesInductiveSensoren();
 
   //seriele communicatie
   // Specify the message to send
@@ -161,5 +184,54 @@ void handmatigBewegen() {
     default:
       analogWrite(pwmA, 0);
       analogWrite(pwmB, 0);
+  }
+}
+
+void leesMicroSwitches(){
+  // Lees de status van de schakelaars
+  bool switch1State = digitalRead(msBeneden);
+  bool switch2State = digitalRead(msBoven);
+  
+  // Controleer of een van de schakelaars geactiveerd is
+  if (switch1State == HIGH || switch2State == HIGH) {
+    // Als een van de schakelaars geactiveerd is, stop de motor
+    digitalWrite(pwmB, LOW);
+
+    // Print naar de seriële monitor welke schakelaar is ingedrukt
+    if (switch1State == HIGH) {
+      Serial.println("Switch beneden is ingedrukt!");
+      analogWrite(pwmB, 255);
+      digitalWrite(dirB, LOW);
+      delay(10);
+    }
+    if (switch2State == HIGH) {
+      Serial.println("Switch boven is ingedrukt!");
+      analogWrite(pwmB, 50);
+      digitalWrite(dirB, HIGH);
+    }
+  } 
+}
+
+void leesInductiveSensoren(){
+  // Lees de status van de schakelaars
+  bool indLinksState = digitalRead(indLinks);
+  bool indRechtsState = digitalRead(indRechts);
+  
+  // Controleer of een van de schakelaars geactiveerd is
+  if (indLinksState == LOW || indRechtsState == LOW) {
+    // Als een van de schakelaars geactiveerd is, stop de motor
+    digitalWrite(pwmB, LOW);
+
+    // Print naar de seriële monitor welke schakelaar is ingedrukt
+    if (indLinksState == LOW) {
+    Serial.println("Nabijheid gedetecteerd aan de rechterkant");
+    analogWrite(pwmA, 50);
+    digitalWrite(dirA, LOW);
+    }
+    if (indRechtsState == LOW) {
+    Serial.println("Nabijheid gedetecteerd aan de linker kant");
+    analogWrite(pwmA, 50);
+    digitalWrite(dirA, HIGH);
+    } 
   }
 }
