@@ -1,5 +1,15 @@
+#include <SoftwareSerial.h>
+
 #define VRX_PIN  A2 // Arduino pin connected to VRX pin
 #define VRY_PIN  A3 // Arduino pin connected to VRY pin
+
+//seriele communicatie
+SoftwareSerial link(7, 10); // Rx, Tx
+byte greenLED = 12;
+char cString[20];
+byte chPos = 0;
+sendmessageMillis = 0
+//seriele communicatie end
 
 int pwmA = 3;
 int dirA = 12;
@@ -21,6 +31,11 @@ void setup() {
   pinMode(pwmB, OUTPUT);
   pinMode(dirB, OUTPUT);
   Serial.begin(9600) ;
+
+  //seriele communicatie
+  link.begin(9600);
+  pinMode(greenLED, OUTPUT);
+  //seriele communicatie end
 }
 
 void loop() {
@@ -28,6 +43,36 @@ void loop() {
   leesJoystick();
   geefRichting();
   handmatigBewegen();
+
+  // Specify the message to send
+  const char* messageToSend = "1to2";
+
+  // Transmit the message
+  if ((millis() - sendmessageMillis) > 200) {
+  sendMessage(messageToSend);
+  sendmessageMillis = millis();
+  }
+  
+  while (link.available()) {
+    char ch = link.read();
+    if (chPos < sizeof(cString) - 1) { // Avoid buffer overflow
+      cString[chPos++] = ch;
+    }
+  }
+  
+  if (chPos > 0) { // Check if there is any received data
+    cString[chPos] = '\0'; // Terminate cString
+    Serial.print(cString);
+    chPos = 0; // Reset position for the next message
+  }
+}
+
+// Function to transmit a message over the serial connection
+void sendMessage(const char* message) {
+  digitalWrite(greenLED, HIGH);
+  link.println(message);
+  //Serial.println(message); // Print to local screen for debugging
+  digitalWrite(greenLED, LOW);
 }
 
 void leesJoystick() {
