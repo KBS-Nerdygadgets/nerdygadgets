@@ -44,29 +44,26 @@ void loop() {
   geefRichting();
   handmatigBewegen();
 
+  //seriele communicatie
   // Specify the message to send
   const char* messageToSend = "1to2";
-
   // Transmit the message
   if ((millis() - sendmessageMillis) > 200) {
   sendMessage(messageToSend);
   sendmessageMillis = millis();
   }
-  
   while (link.available()) {
     char ch = link.read();
     if (chPos < sizeof(cString) - 1) { // Avoid buffer overflow
       cString[chPos++] = ch;
     }
   }
-  
   if (chPos > 0) { // Check if there is any received data
     cString[chPos] = '\0'; // Terminate cString
     Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
 }
-
 // Function to transmit a message over the serial connection
 void sendMessage(const char* message) {
   digitalWrite(greenLED, HIGH);
@@ -74,6 +71,7 @@ void sendMessage(const char* message) {
   //Serial.println(message); // Print to local screen for debugging
   digitalWrite(greenLED, LOW);
 }
+//seriele communicatie end
 
 void leesJoystick() {
   xValue = analogRead(VRX_PIN);
