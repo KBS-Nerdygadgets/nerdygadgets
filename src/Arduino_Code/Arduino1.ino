@@ -31,6 +31,12 @@ int msBoven =  A5;
 int indLinks = 5;
 int indRechts = 6;
 
+//Uiteinde sensoren variablen
+boolean drukSwitchBoven = false;
+boolean drukSwitchBeneden = false;
+boolean metaalLinks = false;
+boolean metaalRechts = false;
+
 String richting = "";
 
 void setup() {
@@ -103,19 +109,19 @@ void leesJoystick() {
 
 void geefRichting() {
   richting = "";
-  if (xValue > 700) {
+  if (xValue > 700 && metaalLinks == false) {
     richting += "1";
   }
 
-  if (xValue < 300) {
+  if (xValue < 300 && metaalLinks == false) {
     richting += "2";
   }
 
-  if (yValue > 700) {
+  if (yValue > 700 && drukSwitchBoven == false ) {
     richting += "3";
   }
 
-  if (yValue < 300) {
+  if (yValue < 300 && drukSwitchBeneden == false) {
     richting += "4";
   }
 
@@ -200,16 +206,16 @@ void leesMicroSwitches(){
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
       Serial.println("Switch beneden is ingedrukt!");
-      analogWrite(pwmB, 255);
-      digitalWrite(dirB, LOW);
-      delay(10);
+      drukSwitchBeneden = true; 
     }
     if (switch2State == HIGH) {
       Serial.println("Switch boven is ingedrukt!");
-      analogWrite(pwmB, 50);
-      digitalWrite(dirB, HIGH);
+      drukSwitchBoven = true; 
     }
-  } 
+  } else {
+    drukSwitchBoven = false;
+    drukSwitchBeneden = false;
+  }
 }
 
 void leesInductiveSensoren(){
@@ -224,14 +230,15 @@ void leesInductiveSensoren(){
 
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
-    Serial.println("Nabijheid gedetecteerd aan de rechterkant");
-    analogWrite(pwmA, 50);
-    digitalWrite(dirA, LOW);
+    Serial.println("Nabijheid gedetecteerd aan de linkerkant");
+    metaalLinks = true;
     }
     if (indRechtsState == LOW) {
-    Serial.println("Nabijheid gedetecteerd aan de linker kant");
-    analogWrite(pwmA, 50);
-    digitalWrite(dirA, HIGH);
+    Serial.println("Nabijheid gedetecteerd aan de rechterkant");
+    metaalRechts = true;
     } 
+  } else {
+    metaalLinks = false;
+    metaalRechts = false;
   }
 }
