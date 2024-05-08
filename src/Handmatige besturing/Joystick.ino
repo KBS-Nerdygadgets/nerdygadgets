@@ -72,7 +72,7 @@ void handmatigBewegen() {
     case 1:
       analogWrite(pwmA, 127);
       digitalWrite(dirA, HIGH);
-      digitalWrite(pwmB, 0);
+      analogWrite(pwmB, 0);
       break;
     
     case 4:
