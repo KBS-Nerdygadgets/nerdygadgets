@@ -7,6 +7,11 @@ int dirA = 12;
 int pwmB = 11;
 int dirB = 13;
 
+int encoderPin = 2;
+int richtingPin = 4;
+
+int encoder = 0;
+
 int xValue = 0; // To store value of the X axis
 int yValue = 0; // To store value of the Y axis
 
@@ -20,7 +25,10 @@ void setup() {
   pinMode(dirA, OUTPUT);
   pinMode(pwmB, OUTPUT);
   pinMode(dirB, OUTPUT);
-  Serial.begin(9600) ;
+
+  pinMode(encoderPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(encoderPin), leesEncoder, RISING);
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -28,15 +36,22 @@ void loop() {
   leesJoystick();
   geefRichting();
   handmatigBewegen();
+  Serial.println(encoder);
 }
 
-//Lees de richting van de joystick
+void leesEncoder() {
+  if (digitalRead(richtingPin) == 1) {
+    encoder++;
+  } else {
+    encoder--;
+  }
+}
+
 void leesJoystick() {
   xValue = analogRead(VRX_PIN);
   yValue = analogRead(VRY_PIN);
 }
 
-//Kies de richting waar de robot naar moet bewegen
 void geefRichting() {
   richting = "";
   if (xValue > 700) {
@@ -59,41 +74,36 @@ void geefRichting() {
     richting += "0";
   }
 
-  Serial.println(richting);
+  // Serial.println(richting);
 }
 
 void handmatigBewegen() {
   int var = richting.toInt();
   switch (var) {
-    //X naar Rechts
-    case 1:
-      analogWrite(pwmA, 127);
-      digitalWrite(dirA, HIGH);
-      analogWrite(pwmB, 0);
-      break;
-
-    //X naar Links
     case 2:
       analogWrite(pwmA, 127);
       digitalWrite(dirA, LOW);
       analogWrite(pwmB, 0);
       break;
 
-    //Y naar Beneden
-    case 3:
-      analogWrite(pwmB, 127);
-      digitalWrite(dirB, HIGH);
-      analogWrite(pwmA, 0);
+    case 1:
+      analogWrite(pwmA, 127);
+      digitalWrite(dirA, HIGH);
+      analogWrite(pwmB, 0);
       break;
-
-    //Y naar Boven
+    
     case 4:
       analogWrite(pwmB, 255);
       digitalWrite(dirB, LOW);
       analogWrite(pwmA, 0);
       break;
-      
-    //rechts omhoog
+    
+    case 3:
+      analogWrite(pwmB, 127);
+      digitalWrite(dirB, HIGH);
+      analogWrite(pwmA, 0);
+      break;
+    
     case 14:
       analogWrite(pwmA, 127);
       analogWrite(pwmB, 255);
@@ -101,15 +111,13 @@ void handmatigBewegen() {
       digitalWrite(dirB, LOW);
       break;
 
-    //links omhoog
     case 24:
       analogWrite(pwmA, 127);
       digitalWrite(dirA, LOW);
       analogWrite(pwmB, 255);
       digitalWrite(dirB, LOW);
       break;
-
-    //links omlaag
+  
     case 23:
       analogWrite(pwmA, 127);
       digitalWrite(dirA, LOW);  
@@ -117,7 +125,6 @@ void handmatigBewegen() {
       digitalWrite(dirB, HIGH);
       break;
 
-    //rechts omhoog
     case 13:
       analogWrite(pwmA, 127);
       digitalWrite(dirA, HIGH);
@@ -125,7 +132,6 @@ void handmatigBewegen() {
       digitalWrite(dirB, HIGH);
       break;
 
-    //rechts omlaag
     default:
       analogWrite(pwmA, 0);
       analogWrite(pwmB, 0);
