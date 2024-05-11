@@ -7,6 +7,11 @@ int dirA = 12;
 int pwmB = 11;
 int dirB = 13;
 
+int encoderPin = 2;
+int richtingPin = 4;
+
+int encoder = 0;
+
 int xValue = 0; // To store value of the X axis
 int yValue = 0; // To store value of the Y axis
 
@@ -20,7 +25,10 @@ void setup() {
   pinMode(dirA, OUTPUT);
   pinMode(pwmB, OUTPUT);
   pinMode(dirB, OUTPUT);
-  Serial.begin(9600) ;
+
+  pinMode(encoderPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(encoderPin), leesEncoder, RISING);
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -28,6 +36,15 @@ void loop() {
   leesJoystick();
   geefRichting();
   handmatigBewegen();
+  Serial.println(encoder);
+}
+
+void leesEncoder() {
+  if (digitalRead(richtingPin) == 1) {
+    encoder++;
+  } else {
+    encoder--;
+  }
 }
 
 void leesJoystick() {
@@ -57,7 +74,7 @@ void geefRichting() {
     richting += "0";
   }
 
-  Serial.println(richting);
+  // Serial.println(richting);
 }
 
 void handmatigBewegen() {
