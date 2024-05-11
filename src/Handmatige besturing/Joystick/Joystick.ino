@@ -63,30 +63,35 @@ void geefRichting() {
 void handmatigBewegen() {
   int var = richting.toInt();
   switch (var) {
+    //X naar Rechts
+    case 1:
+      analogWrite(pwmA, 127);
+      digitalWrite(dirA, HIGH);
+      analogWrite(pwmB, 0);
+      break;
+
+    //X naar Links
     case 2:
       analogWrite(pwmA, 127);
       digitalWrite(dirA, LOW);
       analogWrite(pwmB, 0);
       break;
 
-    case 1:
-      analogWrite(pwmA, 127);
-      digitalWrite(dirA, HIGH);
-      analogWrite(pwmB, 0);
-      break;
-    
-    case 4:
-      analogWrite(pwmB, 255);
-      digitalWrite(dirB, LOW);
-      analogWrite(pwmA, 0);
-      break;
-    
+    //Y naar beneden
     case 3:
       analogWrite(pwmB, 127);
       digitalWrite(dirB, HIGH);
       analogWrite(pwmA, 0);
       break;
-    
+
+    //Y naar boven
+    case 4:
+      analogWrite(pwmB, 255);
+      digitalWrite(dirB, LOW);
+      analogWrite(pwmA, 0);
+      break;
+      
+    //rechts omhoog
     case 14:
       analogWrite(pwmA, 127);
       analogWrite(pwmB, 255);
@@ -94,13 +99,15 @@ void handmatigBewegen() {
       digitalWrite(dirB, LOW);
       break;
 
+    //links omhoog
     case 24:
       analogWrite(pwmA, 127);
       digitalWrite(dirA, LOW);
       analogWrite(pwmB, 255);
       digitalWrite(dirB, LOW);
       break;
-  
+
+    //links omlaag
     case 23:
       analogWrite(pwmA, 127);
       digitalWrite(dirA, LOW);  
@@ -108,6 +115,7 @@ void handmatigBewegen() {
       digitalWrite(dirB, HIGH);
       break;
 
+    //rechts omhoog
     case 13:
       analogWrite(pwmA, 127);
       digitalWrite(dirA, HIGH);
@@ -115,6 +123,7 @@ void handmatigBewegen() {
       digitalWrite(dirB, HIGH);
       break;
 
+    //rechts omlaag
     default:
       analogWrite(pwmA, 0);
       analogWrite(pwmB, 0);
