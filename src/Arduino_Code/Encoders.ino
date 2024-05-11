@@ -1,21 +1,32 @@
 #define VRX_PIN  A2 // Arduino pin connected to VRX pin
 #define VRY_PIN  A3 // Arduino pin connected to VRY pin
 
-int pwmA = 3;
-int dirA = 12;
+const int snelheid = 255;
 
-int pwmB = 11;
-int dirB = 13;
+const int pwmA = 3;
+const int dirA = 12;
 
-int encoderPin = 2;
-int richtingPin = 4;
+const int pwmB = 11;
+const int dirB = 13;
 
-int encoder = 0;
+const int XencoderPin = 2;
+const int XrichtingPin = 4;
 
-int xValue = 0; // To store value of the X axis
-int yValue = 0; // To store value of the Y axis
+int Xencoder = 0;
+
+const int xValue = 0; // To store value of the X axis
+const int yValue = 0; // To store value of the Y axis
 
 String richting = "";
+
+//753 pulsen per coordinaat
+const int coordinaten[5][2] = {
+  {155, 0},   //5:1
+  {911, 0},   //5:2
+  {1664, 0},  //5:3
+  {2417, 0},  //5:4
+  {3170, 0}   //5:5
+}
 
 void setup() {
   TCCR2B = TCCR2B & B11111000 | B00000110; // for PWM frequency of 122.55 Hz
@@ -26,25 +37,49 @@ void setup() {
   pinMode(pwmB, OUTPUT);
   pinMode(dirB, OUTPUT);
 
-  pinMode(encoderPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(encoderPin), leesEncoder, RISING);
+  pinMode(XencoderPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(XencoderPin), leesEncoder, RISING);
   Serial.begin(9600);
 }
 
 void loop() {
-  // read analog X and Y analog values
-  leesJoystick();
-  geefRichting();
-  handmatigBewegen();
-  Serial.println(encoder);
+  // handmatigeStatus();
+  Serial.println(Xencoder);
+}
+
+void gaNaarCoordinaat(int coordinaatIndex){
+  coordinaat = coordinaten[coordinaatIndex]
+  //beweeg naar links als coordinaat zich links bevind
+  if(Xencoder > coordinaat[0]){
+    analogWrite(pwmA, snelheid);
+    digitalWrite(dirA, LOW);
+    analogWrite(pwmB, 0);
+  }
+  //beweeg naar rechts als coordinaat zich rechts bevind
+  else if(Xencoder < coordinaat[0]){
+    analogWrite(pwmA, snelheid);
+    digitalWrite(dirA, HIGH);
+    analogWrite(pwmB, 0);
+  }
+  //stop
+  else{
+    analogWrite(pwmA, 0);
+    analogWrite(pwmB, 0);
+  }
 }
 
 void leesEncoder() {
-  if (digitalRead(richtingPin) == 1) {
-    encoder++;
+  if (digitalRead(XrichtingPin) == 1) {
+    Xencoder++;
   } else {
-    encoder--;
+    Xencoder--;
   }
+}
+
+void handmatigeStatus(){
+  leesJoystick();
+  geefRichting();
+  handmatigBewegen();
 }
 
 void leesJoystick() {
@@ -80,55 +115,63 @@ void geefRichting() {
 void handmatigBewegen() {
   int var = richting.toInt();
   switch (var) {
-    case 2:
-      analogWrite(pwmA, 127);
-      digitalWrite(dirA, LOW);
-      analogWrite(pwmB, 0);
-      break;
-
+    //X naar Rechts
     case 1:
-      analogWrite(pwmA, 127);
+      analogWrite(pwmA, snelheid/2);
       digitalWrite(dirA, HIGH);
       analogWrite(pwmB, 0);
       break;
-    
-    case 4:
-      analogWrite(pwmB, 255);
-      digitalWrite(dirB, LOW);
-      analogWrite(pwmA, 0);
-      break;
-    
-    case 3:
-      analogWrite(pwmB, 127);
-      digitalWrite(dirB, HIGH);
-      analogWrite(pwmA, 0);
-      break;
-    
-    case 14:
-      analogWrite(pwmA, 127);
-      analogWrite(pwmB, 255);
-      digitalWrite(dirA, HIGH);
-      digitalWrite(dirB, LOW);
-      break;
 
-    case 24:
-      analogWrite(pwmA, 127);
+    //X naar Links
+    case 2:
+      analogWrite(pwmA, snelheid/2);
       digitalWrite(dirA, LOW);
-      analogWrite(pwmB, 255);
+      analogWrite(pwmB, 0);
+      break;
+
+    //Y naar Beneden
+    case 3:
+      analogWrite(pwmB, snelheid/2);
+      digitalWrite(dirB, HIGH);
+      analogWrite(pwmA, 0);
+      break;
+
+    //Y naar Boven
+    case 4:
+      analogWrite(pwmB, snelheid/2);
+      digitalWrite(dirB, LOW);
+      analogWrite(pwmA, 0);
+      break;
+      
+    //rechts omhoog
+    case 14:
+      analogWrite(pwmA, snelheid/2);
+      digitalWrite(dirA, HIGH);
+      analogWrite(pwmB, snelheid/2);
       digitalWrite(dirB, LOW);
       break;
-  
+
+    //links omhoog
+    case 24:
+      analogWrite(pwmA, snelheid/2);
+      digitalWrite(dirA, LOW);
+      analogWrite(pwmB, snelheid/2);
+      digitalWrite(dirB, LOW);
+      break;
+
+    //links omlaag
     case 23:
-      analogWrite(pwmA, 127);
+      analogWrite(pwmA, snelheid/2);
       digitalWrite(dirA, LOW);  
-      analogWrite(pwmB, 127);
+      analogWrite(pwmB, snelheid/2);
       digitalWrite(dirB, HIGH);
       break;
 
+    //rechts omlaag
     case 13:
-      analogWrite(pwmA, 127);
+      analogWrite(pwmA, snelheid/2);
       digitalWrite(dirA, HIGH);
-      analogWrite(pwmB, 127);
+      analogWrite(pwmB, snelheid/2);
       digitalWrite(dirB, HIGH);
       break;
 
