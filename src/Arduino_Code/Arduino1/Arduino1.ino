@@ -8,8 +8,9 @@ SoftwareSerial link(7, 10); // Rx, Tx
 byte greenLED = 12;
 char cString[20];
 byte chPos = 0;
-sendmessageMillis = 0
+unsigned long sendmessageMillis = 0;
 
+//Snelheid van de Motoren
 const int snelheid = 255;
 const int snelheidHandmatig = snelheid/2;
 
@@ -27,11 +28,11 @@ const int dirB = 13;
 const int brakeB = 8;
 int yValue = 0; // To store value of the Y axis
 
+//Knoppen
 const int resetKnopEncoder = 5;
 const int knopSwitchStatus = 6;
 
 int status = 1;
-
 String richting = "";
 
 //753 pulsen per coordinaat
@@ -52,10 +53,10 @@ int indLinks = 5;
 int indRechts = 6;
 
 //Uiteinde sensoren variablen
-boolean drukSwitchBoven = false;
-boolean drukSwitchBeneden = false;
-boolean metaalLinks = false;
-boolean metaalRechts = false;
+bool drukSwitchBoven = false;
+bool drukSwitchBeneden = false;
+bool metaalLinks = false;
+bool metaalRechts = false;
 
 //*Setup
 void setup() {
@@ -84,7 +85,9 @@ void setup() {
   pinMode(indLinks, INPUT);
   pinMode(indRechts, INPUT);
 
+  //Interrupt voor encoder
   attachInterrupt(digitalPinToInterrupt(XencoderPin), leesEncoder, RISING);
+
   Serial.begin(9600);
 
   //seriele communicatie setup
@@ -96,7 +99,7 @@ void setup() {
 void loop() {
   leesMicroSwitches();
   leesInductiveSensoren();
-  isKnopIngedrukt();
+  activeerStatus();
   comm1naar2();
   //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
   Serial.println(Xencoder);
@@ -133,7 +136,7 @@ void sendMessage(const char* message) {
 
 //*Functies voor de knoppen
 //Lees of de 2 knoppen zijn ingedrukt
-void isKnopIngedrukt(){
+void activeerStatus(){
   status = 1;
 
   //Encoder wordt gereset;
