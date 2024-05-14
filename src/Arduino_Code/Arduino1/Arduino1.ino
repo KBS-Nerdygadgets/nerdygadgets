@@ -8,20 +8,40 @@ SoftwareSerial link(7, 10); // Rx, Tx
 byte greenLED = 12;
 char cString[20];
 byte chPos = 0;
-unsigned long sendmessageMillis = 0;
-//seriele communicatie end
+sendmessageMillis = 0
 
-//Motorpin voor motor x-as
-int pwmA = 3;
-int dirA = 12;
+const int snelheid = 255;
+const int snelheidHandmatig = snelheid/2;
 
-//Motorpin voor motor y-as
-int pwmB = 11;
-int dirB = 13;
-
-//De assen van de joystick
+//Xas
+const int pwmA = 3;
+const int dirA = 12;
+const int XencoderPin = 2;
+const int XrichtingPin = 4;
+int Xencoder = 0;
 int xValue = 0; // To store value of the X axis
+
+//Yas
+const int pwmB = 11;
+const int dirB = 13;
+const int brakeB = 8;
 int yValue = 0; // To store value of the Y axis
+
+const int resetKnopEncoder = 5;
+const int knopSwitchStatus = 6;
+
+int status = 1;
+
+String richting = "";
+
+//753 pulsen per coordinaat
+const int coordinaten[5][2] = {
+  {155, 0},   //5:1
+  {911, 0},   //5:2
+  {1664, 0},  //5:3
+  {2417, 0},  //5:4
+  {3170, 0}   //5:5
+};
 
 //Pins van de microswitches, ms = microswitch
 int msBeneden = A4;
@@ -37,45 +57,55 @@ boolean drukSwitchBeneden = false;
 boolean metaalLinks = false;
 boolean metaalRechts = false;
 
-String richting = "";
-
+//*Setup
 void setup() {
-    TCCR2B = TCCR2B & B11111000 | B00000110; // for PWM frequency of 122.55 Hz
+  delay(1200);
+  TCCR2B = TCCR2B & B11111000 | B00000110; // for PWM frequency of 122.55 Hz
   // TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30.64 Hz
-  //pinMode motoren
+
+  //Pins voor motoren
+  //X
   pinMode(pwmA, OUTPUT);
   pinMode(dirA, OUTPUT);
+  pinMode(XencoderPin, INPUT_PULLUP);
+  //Y
   pinMode(pwmB, OUTPUT);
   pinMode(dirB, OUTPUT);
 
+  //Pins voor knoppen
+  pinMode(resetKnopEncoder, INPUT_PULLUP);
+  pinMode(knopSwitchStatus, INPUT_PULLUP);
+
   //pinMode microswitches
-  pinMode(msBeneden, INPUT);
-  pinMode(msBoven, INPUT);
+  pinMode(msBeneden, INPUT_PULLUP);
+  pinMode(msBoven, INPUT_PULLUP);
 
   //pinMode inductive (metaal)sensoren
   pinMode(indLinks, INPUT);
   pinMode(indRechts, INPUT);
 
-  Serial.begin(9600) ;
+  attachInterrupt(digitalPinToInterrupt(XencoderPin), leesEncoder, RISING);
+  Serial.begin(9600);
 
-
-  //seriele communicatie
+  //seriele communicatie setup
   link.begin(9600);
   pinMode(greenLED, OUTPUT);
-  //seriele communicatie end
 }
 
+//*Loop
 void loop() {
-  // read analog X and Y analog values
-  leesJoystick();
-  geefRichting();
-  handmatigBewegen();
   leesMicroSwitches();
   leesInductiveSensoren();
+  isKnopIngedrukt();
+  comm1naar2();
+  //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
+  Serial.println(Xencoder);
+}
 
-  //seriele communicatie
-  // Specify the message to send
-  const char* messageToSend = "001"; //dit is de message die je wilt sturen. "001" kan met alles vervangen worden, ook variabelen
+//*Functies voor communicatie tussen Arduinos
+// Specify the message to send
+void comm1naar2(){
+  const char* messageToSend = "1to2";
   // Transmit the message
   if ((millis() - sendmessageMillis) > 200) {
   sendMessage(messageToSend);
@@ -92,28 +122,77 @@ void loop() {
     Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
-  String input = cString;
-  firstThreeChars = input.substring(0, 3);  //string input van eerste 3 getallen (0, 3)
-  lastFourChars = input.substring(3, 7);  //string input van laatste 4 getallen (3, 7)
-
-  if (firstThreeChars.toInt() == 323) { //iets als de eerste 3 karakters over serial 323 zijn. je kunt dit aanpassen zolang het een nummer is
-    //Serial.print("success");  //print voor debugging
-  }
-  if (lastFourChars.toInt() == 4890) { //iets als de eerste 3 karakters over serial 4890 zijn. je kunt dit aanpassen zolang het een nummer is
-    //Serial.print("success");  //print voor debugging
-  }
-  //seriele communicatie end
 }
-
-
-//seriele communicatie
+// Function to transmit a message over the serial connection
 void sendMessage(const char* message) {
   digitalWrite(greenLED, HIGH);
   link.println(message);
   //Serial.println(message); // Print to local screen for debugging
   digitalWrite(greenLED, LOW);
 }
-//seriele communicatie end
+
+//*Functies voor de knoppen
+//Lees of de 2 knoppen zijn ingedrukt
+void isKnopIngedrukt(){
+  status = 1;
+
+  //Encoder wordt gereset;
+  if(digitalRead(resetKnopEncoder) == 0){
+    Xencoder = 0;
+  }
+
+  //Status wordt op automatisch gezet
+  if(digitalRead(knopSwitchStatus) == 0){
+      status = 2;
+  }
+
+  //Als knop niet is ingedrukt 
+  if(status == 1){
+    handmatigeStatus();
+  }
+
+  //Hou de bovenste knop ingedrukt om de automatische mode te activeren
+  else if(status == 2){
+    gaNaarCoordinaat(3);
+  }
+}
+
+//*Functies voor statussen
+void gaNaarCoordinaat(int coordinaatIndex){
+  digitalWrite(brakeB, LOW);
+  //beweeg naar links als coordinaat zich links bevind
+  if(Xencoder > coordinaten[coordinaatIndex][0]){
+    analogWrite(pwmB, 0);
+    analogWrite(pwmA, snelheid);
+    digitalWrite(dirA, LOW);
+  }
+  //beweeg naar rechts als coordinaat zich rechts bevind
+  else if(Xencoder < coordinaten[coordinaatIndex][0]){
+    analogWrite(pwmB, 0);
+    analogWrite(pwmA, snelheid);
+    digitalWrite(dirA, HIGH);
+  }
+  else{
+  //stop
+    analogWrite(pwmA, 0);
+    analogWrite(pwmB, 0);
+    digitalWrite(brakeB, HIGH);
+  }
+}
+
+void leesEncoder() {
+  if (digitalRead(XrichtingPin) == 1) {
+    Xencoder++;
+  } else {
+    Xencoder--;
+  }
+}
+
+void handmatigeStatus(){
+  leesJoystick();
+  geefRichting();
+  handmatigBewegen();
+}
 
 void leesJoystick() {
   xValue = analogRead(VRX_PIN);
@@ -122,90 +201,100 @@ void leesJoystick() {
 
 void geefRichting() {
   richting = "";
-  if (xValue > 700 && metaalLinks == false) {
+  //Joystick naar rechts
+  if (xValue > 700) {
     richting += "1";
   }
-
-  if (xValue < 300 && metaalLinks == false) {
+  //Joystick naar links
+  if (xValue < 300) {
     richting += "2";
   }
-
-  if (yValue > 700 && drukSwitchBoven == false ) {
+  //Joystick naar boven
+  if (yValue > 700) {
     richting += "3";
   }
-
-  if (yValue < 300 && drukSwitchBeneden == false) {
+  //Joystick naar beneden
+  if (yValue < 300) {
     richting += "4";
   }
-
+  //Stop
   if (richting == "") {
     richting += "0";
   }
-
-  //Serial.println(richting);
 }
 
 void handmatigBewegen() {
+  //Zet de string om in een Int
   int var = richting.toInt();
   switch (var) {
-    case 2:
-      analogWrite(pwmA, 127);
-      digitalWrite(dirA, LOW);
-      analogWrite(pwmB, 0);
-      break;
-
+    //X naar Rechts
     case 1:
-      analogWrite(pwmA, 127);
+      analogWrite(pwmA, snelheidHandmatig);
       digitalWrite(dirA, HIGH);
       analogWrite(pwmB, 0);
       break;
-    
-    case 4:
-      analogWrite(pwmB, 255);
-      digitalWrite(dirB, LOW);
-      analogWrite(pwmA, 0);
-      break;
-    
-    case 3:
-      analogWrite(pwmB, 127);
-      digitalWrite(dirB, HIGH);
-      analogWrite(pwmA, 0);
-      break;
-    
-    case 14:
-      analogWrite(pwmA, 127);
-      analogWrite(pwmB, 255);
-      digitalWrite(dirA, HIGH);
-      digitalWrite(dirB, LOW);
-      break;
 
-    case 24:
-      analogWrite(pwmA, 127);
+    //X naar Links
+    case 2:
+      analogWrite(pwmA, snelheidHandmatig);
       digitalWrite(dirA, LOW);
-      analogWrite(pwmB, 255);
+      analogWrite(pwmB, 0);
+      break;
+
+    //Y naar Beneden
+    case 3:
+      analogWrite(pwmB, snelheidHandmatig);
+      digitalWrite(dirB, HIGH);
+      analogWrite(pwmA, 0);
+      break;
+
+    //Y naar Boven
+    case 4:
+      analogWrite(pwmB, snelheidHandmatig);
+      digitalWrite(dirB, LOW);
+      analogWrite(pwmA, 0);
+      break;
+      
+    //rechts omhoog
+    case 14:
+      analogWrite(pwmA, snelheidHandmatig);
+      digitalWrite(dirA, HIGH);
+      analogWrite(pwmB, snelheidHandmatig);
       digitalWrite(dirB, LOW);
       break;
-  
+
+    //links omhoog
+    case 24:
+      analogWrite(pwmA, snelheidHandmatig);
+      digitalWrite(dirA, LOW);
+      analogWrite(pwmB, snelheidHandmatig);
+      digitalWrite(dirB, LOW);
+      break;
+
+    //links omlaag
     case 23:
-      analogWrite(pwmA, 127);
+      analogWrite(pwmA, snelheidHandmatig);
       digitalWrite(dirA, LOW);  
-      analogWrite(pwmB, 127);
+      analogWrite(pwmB, snelheidHandmatig);
       digitalWrite(dirB, HIGH);
       break;
 
+    //rechts omlaag
     case 13:
-      analogWrite(pwmA, 127);
+      analogWrite(pwmA, snelheidHandmatig);
       digitalWrite(dirA, HIGH);
-      analogWrite(pwmB, 127);
+      analogWrite(pwmB, snelheidHandmatig);
       digitalWrite(dirB, HIGH);
       break;
 
+    //Stop
     default:
       analogWrite(pwmA, 0);
       analogWrite(pwmB, 0);
   }
 }
 
+//*Functies voor sensoren
 void leesMicroSwitches(){
   // Lees de status van de schakelaars
   bool switch1State = digitalRead(msBeneden);
@@ -218,11 +307,11 @@ void leesMicroSwitches(){
 
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
-      //Serial.println("Switch beneden is ingedrukt!");
+      Serial.println("Switch beneden is ingedrukt!");
       drukSwitchBeneden = true; 
     }
     if (switch2State == HIGH) {
-      //Serial.println("Switch boven is ingedrukt!");
+      Serial.println("Switch boven is ingedrukt!");
       drukSwitchBoven = true; 
     }
   } else {
@@ -243,11 +332,11 @@ void leesInductiveSensoren(){
 
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
-    //Serial.println("Nabijheid gedetecteerd aan de linkerkant");
+    Serial.println("Nabijheid gedetecteerd aan de linkerkant");
     metaalLinks = true;
     }
     if (indRechtsState == LOW) {
-    //Serial.println("Nabijheid gedetecteerd aan de rechterkant");
+    Serial.println("Nabijheid gedetecteerd aan de rechterkant");
     metaalRechts = true;
     } 
   } else {
