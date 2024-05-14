@@ -11,8 +11,10 @@ int aantalProducten = 0;
 int tijd = 0;
 int delayOmhoog = 800;
 
-bool bijCoordinaat = true;
-bool omhoogGegaan = false;
+String tweeNaarEen = "00000";
+
+bool bijCoordinaat = false;
+bool omhoogGegaan = true;
 
 //seriele communicatie
 SoftwareSerial link(7, 10);  // Rx, Tx
@@ -45,37 +47,8 @@ void loop() {
   // put your main code here, to run repeatedly:
   // leesJoystick();
   handmatigBewegen();
-  //if(bijCoordinaat == true) {
-  //  pakProduct();
-  //}
-  // Serial.println(yValue);
-
-  //seriele communicatie
-  // Specify the message to send
-  const char* messageToSend = "3234890"; //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
-  // Transmit the message
-  if ((millis() - sendmessageMillis) > 200) {
-    sendMessage(messageToSend);
-    sendmessageMillis = millis();
-  }
-  while (link.available()) {
-    char ch = link.read();
-    if (chPos < sizeof(cString) - 1) {  // Avoid buffer overflow
-      cString[chPos++] = ch;
-    }
-  }
-  if (chPos > 0) {          // Check if there is any received data
-    cString[chPos] = '\0';  // Terminate cString
-    Serial.print(cString);
-    chPos = 0;  // Reset position for the next message
-  }
-  String input = cString;
-  firstThreeChars = input.substring(0, 3);  //string input van eerste 3 getallen (0, 3)
-
-  if (firstThreeChars.toInt() == 001) { //iets als de eerste 3 karakters over serial 001 zijn. je kunt dit aanpassen zolang het een nummer is
-    //Serial.print("success");  //print voor debugging
-  }
-  //seriele communicatie end
+  serialWrite("1234");
+  serialRead();
 }
 
 
@@ -127,10 +100,15 @@ void pakProduct() {
   analogWrite(pwmA, snelheid);
   delay(tijd);
 
+  omhoogGegaan = false;
+  tweeNaarEen.setCharAt(0, "1");
+
   while (omhoogGegaan == false) {
     analogWrite(pwmA, 0);
+
   }
 
+  
 
   analogWrite(pwmA, snelheid);
   digitalWrite(dirA, HIGH);
@@ -140,4 +118,34 @@ void pakProduct() {
 
   bijCoordinaat = false;
   aantalProducten++;
+}
+
+void serialWrite(String message) {
+  // Specify the message to send
+  const char* messageToSend = message.c_str(); //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
+  // Transmit the message
+  if ((millis() - sendmessageMillis) > 200) {
+    sendMessage(messageToSend);
+    sendmessageMillis = millis();
+  }
+}
+
+void serialRead() {
+  while (link.available()) {
+    char ch = link.read();
+    if (chPos < sizeof(cString) - 1) {  // Avoid buffer overflow
+      cString[chPos++] = ch;
+    }
+  }
+  if (chPos > 0) {          // Check if there is any received data
+    cString[chPos] = '\0';  // Terminate cString
+    Serial.print(cString);
+    chPos = 0;  // Reset position for the next message
+  }
+  String input = cString;
+  firstThreeChars = input.substring(0, 3);  //string input van eerste 3 getallen (0, 3)
+
+  if (firstThreeChars.toInt() == 001) { //iets als de eerste 3 karakters over serial 001 zijn. je kunt dit aanpassen zolang het een nummer is
+    //Serial.print("success");  //print voor debugging
+  }
 }
