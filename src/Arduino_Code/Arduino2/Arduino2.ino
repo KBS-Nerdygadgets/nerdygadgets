@@ -4,6 +4,11 @@
 int pwmA = 3;
 int dirA = 12;
 
+//Encoder
+const int YencoderPin = 2;
+const int YrichtingPin = 4;
+int Yencoder = 0;
+
 int yValue = 0;
 int snelheid = 255;
 
@@ -32,8 +37,12 @@ void setup() {
   TCCR2B = TCCR2B & B11111000 | B00000110;  // for PWM frequency of 122.55 Hz
   // TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30.64 Hz
 
+  //Pins voor motoren
   pinMode(pwmA, OUTPUT);
   pinMode(dirA, OUTPUT);
+  pinMode(YencoderPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(YencoderPin), leesEncoder, RISING);
+
   Serial.begin(9600);
   Serial.println(yValue);
 
@@ -47,7 +56,9 @@ void loop() {
   // put your main code here, to run repeatedly:
   // leesJoystick();
   handmatigBewegen();
-  serialWrite("1234");
+  encoderInString();
+  Serial.println(Yencoder);
+  serialWrite(tweeNaarEen);
   serialRead();
 }
 
@@ -124,7 +135,7 @@ void serialWrite(String message) {
   // Specify the message to send
   const char* messageToSend = message.c_str(); //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
   // Transmit the message
-  if ((millis() - sendmessageMillis) > 200) {
+  if ((millis() - sendmessageMillis) > 50) {
     sendMessage(messageToSend);
     sendmessageMillis = millis();
   }
@@ -149,3 +160,42 @@ void serialRead() {
     //Serial.print("success");  //print voor debugging
   }
 }
+
+void leesEncoder() {
+  if (digitalRead(YrichtingPin) == 0) {
+    Yencoder++;
+  } else {
+    Yencoder--;
+  }
+}
+
+void encoderInString() {
+  String x = String(Yencoder);
+  if (Yencoder > -1 && Yencoder < 10) {
+    tweeNaarEen.setCharAt(4, x.charAt(0));
+    for (int i = 1; i < 5; i++) {
+      tweeNaarEen.setCharAt(i, 48);
+    }
+  }
+  else if (Yencoder > -1 && Yencoder < 100) {
+    tweeNaarEen.setCharAt(4, x.charAt(1));
+    tweeNaarEen.setCharAt(3, x.charAt(0));
+    tweeNaarEen.setCharAt(2, 48);
+    tweeNaarEen.setCharAt(1, 48);
+  }
+  else if (Yencoder > -1 && Yencoder < 1000) {
+    tweeNaarEen.setCharAt(4, x.charAt(2));
+    tweeNaarEen.setCharAt(3, x.charAt(1));
+    tweeNaarEen.setCharAt(2, x.charAt(0));
+    tweeNaarEen.setCharAt(1, 48);    
+  }
+  else if(Yencoder > -1) {
+    for (int i = 4; i > 0; i--) {
+      tweeNaarEen.setCharAt(i, x.charAt(i-1));
+    }
+  }
+  else {
+    tweeNaarEen = "00000";
+  }
+}
+
