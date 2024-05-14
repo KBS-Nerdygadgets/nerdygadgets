@@ -8,7 +8,7 @@ SoftwareSerial link(7, 10); // Rx, Tx
 byte greenLED = 12;
 char cString[20];
 byte chPos = 0;
-sendmessageMillis = 0
+unsigned long sendmessageMillis = 0;
 //seriele communicatie end
 
 //Motorpin voor motor x-as
@@ -49,8 +49,8 @@ void setup() {
   pinMode(dirB, OUTPUT);
 
   //pinMode microswitches
-  pinMode(msBeneden, INPUT_PULLUP);
-  pinMode(msBoven, INPUT_PULLUP);
+  pinMode(msBeneden, INPUT);
+  pinMode(msBoven, INPUT);
 
   //pinMode inductive (metaal)sensoren
   pinMode(indLinks, INPUT);
@@ -75,7 +75,7 @@ void loop() {
 
   //seriele communicatie
   // Specify the message to send
-  const char* messageToSend = "1to2";
+  const char* messageToSend = "001"; //dit is de message die je wilt sturen. "001" kan met alles vervangen worden, ook variabelen
   // Transmit the message
   if ((millis() - sendmessageMillis) > 200) {
   sendMessage(messageToSend);
@@ -92,8 +92,21 @@ void loop() {
     Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
+  String input = cString;
+  firstThreeChars = input.substring(0, 3);  //string input van eerste 3 getallen (0, 3)
+  lastFourChars = input.substring(3, 7);  //string input van laatste 4 getallen (3, 7)
+
+  if (firstThreeChars.toInt() == 323) { //iets als de eerste 3 karakters over serial 323 zijn. je kunt dit aanpassen zolang het een nummer is
+    //Serial.print("success");  //print voor debugging
+  }
+  if (lastFourChars.toInt() == 4890) { //iets als de eerste 3 karakters over serial 4890 zijn. je kunt dit aanpassen zolang het een nummer is
+    //Serial.print("success");  //print voor debugging
+  }
+  //seriele communicatie end
 }
-// Function to transmit a message over the serial connection
+
+
+//seriele communicatie
 void sendMessage(const char* message) {
   digitalWrite(greenLED, HIGH);
   link.println(message);
@@ -129,7 +142,7 @@ void geefRichting() {
     richting += "0";
   }
 
-  Serial.println(richting);
+  //Serial.println(richting);
 }
 
 void handmatigBewegen() {
@@ -205,11 +218,11 @@ void leesMicroSwitches(){
 
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
-      Serial.println("Switch beneden is ingedrukt!");
+      //Serial.println("Switch beneden is ingedrukt!");
       drukSwitchBeneden = true; 
     }
     if (switch2State == HIGH) {
-      Serial.println("Switch boven is ingedrukt!");
+      //Serial.println("Switch boven is ingedrukt!");
       drukSwitchBoven = true; 
     }
   } else {
@@ -230,11 +243,11 @@ void leesInductiveSensoren(){
 
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
-    Serial.println("Nabijheid gedetecteerd aan de linkerkant");
+    //Serial.println("Nabijheid gedetecteerd aan de linkerkant");
     metaalLinks = true;
     }
     if (indRechtsState == LOW) {
-    Serial.println("Nabijheid gedetecteerd aan de rechterkant");
+    //Serial.println("Nabijheid gedetecteerd aan de rechterkant");
     metaalRechts = true;
     } 
   } else {
