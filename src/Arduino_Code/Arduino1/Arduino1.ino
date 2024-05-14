@@ -18,6 +18,7 @@ const int pwmA = 3;
 const int dirA = 12;
 const int XencoderPin = 2;
 const int XrichtingPin = 4;
+int Yencoder = 0;
 int Xencoder = 0;
 int xValue = 0; // To store value of the X axis
 
@@ -35,12 +36,36 @@ int status = 1;
 String richting = "";
 
 //753 pulsen per coordinaat
-const int coordinaten[5][2] = {
-  {155, 0},   //5:1
-  {911, 0},   //5:2
-  {1664, 0},  //5:3
-  {2417, 0},  //5:4
-  {3170, 0}   //5:5
+const int coordinaten[25][2] = {
+  {155, 125},   //5:1
+  {911, 125},   //5:2
+  {1664, 125},  //5:3
+  {2417, 125},  //5:4
+  {3170, 125},   //5:5
+
+  {155, 542},   //4:1
+  {911, 542},   //4:2
+  {1664, 542},  //4:3
+  {2417, 542},  //4:4
+  {3170, 542},   //4:5
+
+  {155, 960},   //3:1
+  {911, 960},   //3:2
+  {1664, 960},  //3:3
+  {2417, 960},  //3:4
+  {3170, 960},   //3:5
+
+  {155, 1377},   //2:1
+  {911, 1377},   //2:2
+  {1664, 1377},  //2:3
+  {2417, 1377},  //2:4
+  {3170, 1377},   //2:5
+
+  {155, 1796},   //1:1
+  {911, 1796},   //1:2
+  {1664, 1796},  //1:3
+  {2417, 1796},  //1:4
+  {3170, 1796}   //1:5
 };
 
 //Pins van de microswitches, ms = microswitch
@@ -95,11 +120,10 @@ void setup() {
 void loop() {
   // leesMicroSwitches();
   // leesInductiveSensoren();
-  handmatigeStatus();
-  serialRead();
-  // comm1naar2();
+  isKnopIngedrukt();
   //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
-  // Serial.println(Xencoder);
+  Serial.print(Xencoder + ", " + Yencoder);
+  Serial.println();
 }
 
 //*Functies voor communicatie tussen Arduinos
@@ -113,9 +137,23 @@ void serialRead(){
   }
   if (chPos > 0) { // Check if there is any received data
     cString[chPos] = '\0'; // Terminate cString
-    Serial.print(cString);
+    // Serial.print(cString); //Om de string te printen in console
     chPos = 0; // Reset position for the next message
   }
+
+  char firstChar = cString[0];
+
+  if(firstChar == 49){
+    omhoogVoorZ(true);
+  }
+
+  String input = "";
+  for(int i = 1; i < 5; i++){
+    if(cString[i] > 0){
+      input += cString[i];
+    }
+  }
+  int Yencoder = input.toInt();
 }
 
 void serialWrite(String message) {
@@ -154,33 +192,12 @@ void isKnopIngedrukt(){
 
   //Hou de bovenste knop ingedrukt om de automatische mode te activeren
   else if(status == 2){
-    gaNaarCoordinaat(3);
+    serialRead();
+    gaNaarCoordinaat(12);
   }
 }
 
 //*Functies voor statussen
-void gaNaarCoordinaat(int coordinaatIndex){
-  digitalWrite(brakeB, LOW);
-  //beweeg naar links als coordinaat zich links bevind
-  if(Xencoder > coordinaten[coordinaatIndex][0]){
-    analogWrite(pwmB, 0);
-    analogWrite(pwmA, snelheid);
-    digitalWrite(dirA, LOW);
-  }
-  //beweeg naar rechts als coordinaat zich rechts bevind
-  else if(Xencoder < coordinaten[coordinaatIndex][0]){
-    analogWrite(pwmB, 0);
-    analogWrite(pwmA, snelheid);
-    digitalWrite(dirA, HIGH);
-  }
-  else{
-  //stop
-    analogWrite(pwmA, 0);
-    analogWrite(pwmB, 0);
-    digitalWrite(brakeB, HIGH);
-  }
-}
-
 void leesEncoder() {
   if (digitalRead(XrichtingPin) == 1) {
     Xencoder++;
@@ -189,6 +206,52 @@ void leesEncoder() {
   }
 }
 
+//Automatisch
+void gaNaarCoordinaat(int coordinaatIndex){
+  //beweeg naar links als coordinaat zich links bevind
+  if(Xencoder > coordinaten[coordinaatIndex][0]){
+    analogWrite(pwmA, snelheid);
+    digitalWrite(dirA, LOW);
+  }
+  //beweeg naar rechts als coordinaat zich rechts bevind
+  else if(Xencoder < coordinaten[coordinaatIndex][0]){
+    analogWrite(pwmA, snelheid);
+    digitalWrite(dirA, HIGH);
+  }
+  else{
+  //stop
+    analogWrite(pwmA, 0);
+  }
+
+  digitalWrite(brakeB, LOW);
+  //beweeg naar links als coordinaat zich links bevind
+  if(Yencoder > coordinaten[coordinaatIndex][1]){
+    analogWrite(pwmB, snelheid);
+    digitalWrite(dirA, LOW);
+  }
+  //beweeg naar rechts als coordinaat zich rechts bevind
+  else if(Yencoder < coordinaten[coordinaatIndex][1]){
+    analogWrite(pwmB, snelheid);
+    digitalWrite(dirA, HIGH);
+  }
+  else{
+  //stop
+    analogWrite(pwmB, 0);
+    digitalWrite(brakeB, HIGH);
+  }
+}
+
+void omhoogVoorZ(bool omhoog){
+  if(omhoog == true){
+    //Y omhoog
+    analogWrite(pwmB, snelheid);
+    digitalWrite(dirB, LOW);
+    analogWrite(pwmA, 0);
+    // Serial.println("Succes");
+  }
+}
+
+//Handmatig
 void handmatigeStatus(){
   leesJoystick();
   geefRichting();
@@ -345,4 +408,3 @@ void leesInductiveSensoren(){
     metaalRechts = false;
   }
 }
-

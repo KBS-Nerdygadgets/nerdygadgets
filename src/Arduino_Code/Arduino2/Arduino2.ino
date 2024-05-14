@@ -1,6 +1,7 @@
 #include <SoftwareSerial.h>
 #define VRY_PIN A2
 
+//Z as
 int pwmA = 3;
 int dirA = 12;
 
@@ -19,7 +20,6 @@ int delayOmhoog = 800;
 String tweeNaarEen = "00000";
 
 bool bijCoordinaat = false;
-bool omhoogGegaan = true;
 
 //seriele communicatie
 SoftwareSerial link(7, 10);  // Rx, Tx
@@ -52,6 +52,7 @@ void setup() {
   //seriele communicatie end
 }
 
+//*Setup
 void loop() {
   // put your main code here, to run repeatedly:
   // leesJoystick();
@@ -60,18 +61,48 @@ void loop() {
   Serial.println(Yencoder);
   serialWrite(tweeNaarEen);
   serialRead();
+  // pakProduct();
 }
 
-
-//seriele communicatie
+//*Functies voor communicatie tussen Arduinos
 void sendMessage(const char* message) {
   digitalWrite(greenLED, HIGH);
   link.println(message);
   //Serial.println(message); // Print to local screen for debugging
   digitalWrite(greenLED, LOW);
 }
-//seriele communicatie end
 
+void serialWrite(String message) {
+  // Specify the message to send
+  const char* messageToSend = message.c_str(); //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
+  // Transmit the message
+  if ((millis() - sendmessageMillis) > 50) {
+    sendMessage(messageToSend);
+    sendmessageMillis = millis();
+  }
+}
+
+void serialRead() {
+  while (link.available()) {
+    char ch = link.read();
+    if (chPos < sizeof(cString) - 1) {  // Avoid buffer overflow
+      cString[chPos++] = ch;
+    }
+  }
+  if (chPos > 0) {          // Check if there is any received data
+    cString[chPos] = '\0';  // Terminate cString
+    Serial.print(cString);
+    chPos = 0;  // Reset position for the next message
+  }
+  String input = cString;
+  firstThreeChars = input.substring(0, 3);  //string input van eerste 3 getallen (0, 3)
+
+  if (firstThreeChars.toInt() == 001) { //iets als de eerste 3 karakters over serial 001 zijn. je kunt dit aanpassen zolang het een nummer is
+    //Serial.print("success");  //print voor debugging
+  }
+}
+
+//*Functies voor Statussen
 void leesJoystick() {
   yValue = analogRead(VRY_PIN);
 }
@@ -110,54 +141,25 @@ void pakProduct() {
   digitalWrite(dirA, LOW);
   analogWrite(pwmA, snelheid);
   delay(tijd);
+  analogWrite(pwmA, 0);
 
-  omhoogGegaan = false;
-  tweeNaarEen.setCharAt(0, "1");
+  int encoder = Yencoder + 100;
 
-  while (omhoogGegaan == false) {
-    analogWrite(pwmA, 0);
-
+  while(Yencoder < encoder){
+    tweeNaarEen.setCharAt(0, 49);
+    serialWrite(tweeNaarEen);
   }
-
-  
+  tweeNaarEen.setCharAt(0, 48);
 
   analogWrite(pwmA, snelheid);
   digitalWrite(dirA, HIGH);
   delay(tijd);
-
   analogWrite(pwmA, 0);
 
   bijCoordinaat = false;
   aantalProducten++;
-}
-
-void serialWrite(String message) {
-  // Specify the message to send
-  const char* messageToSend = message.c_str(); //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
-  // Transmit the message
-  if ((millis() - sendmessageMillis) > 50) {
-    sendMessage(messageToSend);
-    sendmessageMillis = millis();
-  }
-}
-
-void serialRead() {
-  while (link.available()) {
-    char ch = link.read();
-    if (chPos < sizeof(cString) - 1) {  // Avoid buffer overflow
-      cString[chPos++] = ch;
-    }
-  }
-  if (chPos > 0) {          // Check if there is any received data
-    cString[chPos] = '\0';  // Terminate cString
-    Serial.print(cString);
-    chPos = 0;  // Reset position for the next message
-  }
-  String input = cString;
-  firstThreeChars = input.substring(0, 3);  //string input van eerste 3 getallen (0, 3)
-
-  if (firstThreeChars.toInt() == 001) { //iets als de eerste 3 karakters over serial 001 zijn. je kunt dit aanpassen zolang het een nummer is
-    //Serial.print("success");  //print voor debugging
+  if(aantalProducten == 3){
+    aantalProducten = 0;
   }
 }
 
