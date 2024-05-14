@@ -21,7 +21,7 @@ int yValue = 0; // To store value of the Y axis
 const int resetKnopEncoder = 5;
 const int knopSwitchStatus = 6;
 
-bool status = true;
+int status = 1;
 
 String richting = "";
 
@@ -58,11 +58,11 @@ void setup() {
 
 void loop() {
   isKnopIngedrukt();
-  if(status == Handmatig){
+  if(status == 1){
     handmatigeStatus();
   }
   //Hou de bovenste knop ingedrukt om de automatische mode te activeren
-  else if(status == Automatisch){
+  else if(status == 2){
     gaNaarCoordinaat(3);
   }
   //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
@@ -70,14 +70,14 @@ void loop() {
 }
 
 void isKnopIngedrukt(){
-  status = Handmatig;
+  status = 1;
   //Encoder wordt gereset;
   if(digitalRead(resetKnopEncoder) == 0){
     Xencoder = 0;
   }
   //Status wordt op automatisch gezet
   if(digitalRead(knopSwitchStatus) == 0){
-      status = Automatisch;
+      status = 2;
   }
 }
 
