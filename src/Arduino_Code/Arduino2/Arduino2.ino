@@ -15,17 +15,19 @@ bool bijCoordinaat = true;
 bool omhoogGegaan = false;
 
 //seriele communicatie
-SoftwareSerial link(7, 10); // Rx, Tx
+SoftwareSerial link(7, 10);  // Rx, Tx
 byte greenLED = 12;
 char cString[20];
 byte chPos = 0;
 unsigned long sendmessageMillis = 0;
+
+String firstThreeChars;
 //seriele communicatie end
 
 void setup() {
   // put your setup code here, to run once:
   delay(1500);
-  TCCR2B = TCCR2B & B11111000 | B00000110; // for PWM frequency of 122.55 Hz
+  TCCR2B = TCCR2B & B11111000 | B00000110;  // for PWM frequency of 122.55 Hz
   // TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30.64 Hz
 
   pinMode(pwmA, OUTPUT);
@@ -43,32 +45,41 @@ void loop() {
   // put your main code here, to run repeatedly:
   // leesJoystick();
   handmatigBewegen();
-  if(bijCoordinaat == true) {
-    pakProduct();
-  }
+  //if(bijCoordinaat == true) {
+  //  pakProduct();
+  //}
   // Serial.println(yValue);
 
   //seriele communicatie
   // Specify the message to send
-  const char* messageToSend = "1to2";
+  const char* messageToSend = "3234890"; //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
   // Transmit the message
   if ((millis() - sendmessageMillis) > 200) {
-  sendMessage(messageToSend);
-  sendmessageMillis = millis();
+    sendMessage(messageToSend);
+    sendmessageMillis = millis();
   }
   while (link.available()) {
     char ch = link.read();
-    if (chPos < sizeof(cString) - 1) { // Avoid buffer overflow
+    if (chPos < sizeof(cString) - 1) {  // Avoid buffer overflow
       cString[chPos++] = ch;
     }
   }
-  if (chPos > 0) { // Check if there is any received data
-    cString[chPos] = '\0'; // Terminate cString
+  if (chPos > 0) {          // Check if there is any received data
+    cString[chPos] = '\0';  // Terminate cString
     Serial.print(cString);
-    chPos = 0; // Reset position for the next message
+    chPos = 0;  // Reset position for the next message
   }
+  String input = cString;
+  firstThreeChars = input.substring(0, 3);  //string input van eerste 3 getallen (0, 3)
+
+  if (firstThreeChars.toInt() == 001) { //iets als de eerste 3 karakters over serial 001 zijn. je kunt dit aanpassen zolang het een nummer is
+    //Serial.print("success");  //print voor debugging
+  }
+  //seriele communicatie end
 }
-// Function to transmit a message over the serial connection
+
+
+//seriele communicatie
 void sendMessage(const char* message) {
   digitalWrite(greenLED, HIGH);
   link.println(message);
@@ -93,7 +104,7 @@ void handmatigBewegen() {
     analogWrite(pwmA, 127);
     digitalWrite(dirA, LOW);
   }
-  
+
   else {
     analogWrite(pwmA, LOW);
   }
@@ -118,9 +129,8 @@ void pakProduct() {
 
   while (omhoogGegaan == false) {
     analogWrite(pwmA, 0);
-    
   }
-  
+
 
   analogWrite(pwmA, snelheid);
   digitalWrite(dirA, HIGH);
