@@ -8,7 +8,7 @@ SoftwareSerial link(7, 10); // Rx, Tx
 byte greenLED = 12;
 char cString[20];
 byte chPos = 0;
-sendmessageMillis = 0
+unsigned long sendmessageMillis = 0;
 
 const int snelheid = 255;
 const int snelheidHandmatig = snelheid/2;
@@ -89,28 +89,22 @@ void setup() {
 
   //seriele communicatie setup
   link.begin(9600);
-  pinMode(greenLED, OUTPUT);
 }
 
 //*Loop
 void loop() {
-  leesMicroSwitches();
-  leesInductiveSensoren();
-  isKnopIngedrukt();
-  comm1naar2();
+  // leesMicroSwitches();
+  // leesInductiveSensoren();
+  handmatigeStatus();
+  serialRead();
+  // comm1naar2();
   //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
-  Serial.println(Xencoder);
+  // Serial.println(Xencoder);
 }
 
 //*Functies voor communicatie tussen Arduinos
 // Specify the message to send
-void comm1naar2(){
-  const char* messageToSend = "1to2";
-  // Transmit the message
-  if ((millis() - sendmessageMillis) > 200) {
-  sendMessage(messageToSend);
-  sendmessageMillis = millis();
-  }
+void serialRead(){
   while (link.available()) {
     char ch = link.read();
     if (chPos < sizeof(cString) - 1) { // Avoid buffer overflow
@@ -123,12 +117,19 @@ void comm1naar2(){
     chPos = 0; // Reset position for the next message
   }
 }
+
+void serialWrite(String message) {
+  const char* messageToSend = message.c_str();
+  // Transmit the message
+  if ((millis() - sendmessageMillis) > 200) {
+  sendMessage(messageToSend);
+  sendmessageMillis = millis();
+  }
+}
 // Function to transmit a message over the serial connection
 void sendMessage(const char* message) {
-  digitalWrite(greenLED, HIGH);
   link.println(message);
   //Serial.println(message); // Print to local screen for debugging
-  digitalWrite(greenLED, LOW);
 }
 
 //*Functies voor de knoppen
@@ -344,3 +345,4 @@ void leesInductiveSensoren(){
     metaalRechts = false;
   }
 }
+
