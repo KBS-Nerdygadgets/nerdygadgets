@@ -1,11 +1,34 @@
 #include <SoftwareSerial.h>
 #define VRY_PIN A2
 
-int pwmA = 3;
-int dirA = 12;
+////////////////////////////
+// *** ORANJE ARDUINO *** //
+////////////////////////////
 
+//Motorpins voor motor z-as
+const int pwmA = 3;
+const int dirA = 12;
+
+// Afstandsensorpin voor z-as
+const int distanceSensorZ = A3;
+
+// Afstandsensorenpins voor magazijn
+const int distanceSensorL = A4;
+const int distanceSensorR = A5;
+
+// y-as van de joystick
 int yValue = 0;
 int snelheid = 255;
+
+//variabel voor afstandsensor
+bool voorSafe = false;
+bool achterSafe = false;
+
+// Variable voor uitgeschovend detectie
+bool uitgeschoven = false;
+
+// NOODSTOP
+bool noodstop = false;
 
 int aantalProducten = 0;
 int tijd = 0;
@@ -30,10 +53,17 @@ void setup() {
   TCCR2B = TCCR2B & B11111000 | B00000110;  // for PWM frequency of 122.55 Hz
   // TCCR2B = TCCR2B & B11111000 | B00000111; // for PWM frequency of 30.64 Hz
 
+  //pinMode motor
   pinMode(pwmA, OUTPUT);
   pinMode(dirA, OUTPUT);
-  Serial.begin(9600);
   Serial.println(yValue);
+
+    //pinMode afstandsensoren
+  pinMode(distanceSensorZ, INPUT);
+  pinMode(distanceSensorL, INPUT);
+  pinMode(distanceSensorR, INPUT);
+  
+  Serial.begin(9600);
 
   //seriele communicatie
   link.begin(9600);
@@ -44,6 +74,8 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   // leesJoystick();
+  leesDistanceSensorZ();
+  leesDistanceSchap();
   handmatigBewegen();
   //if(bijCoordinaat == true) {
   //  pakProduct();
@@ -140,4 +172,66 @@ void pakProduct() {
 
   bijCoordinaat = false;
   aantalProducten++;
+}
+
+unsigned long previousMillis = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
+const unsigned long interval = 200; // Interval van 100 milliseconden
+
+void leesDistanceSensorZ(){
+  unsigned long currentMillis = millis(); // Huidige tijd ophalen
+
+  // CONTROLLEER OF HET 100MS IS GEWEEST SINDS DE LAATSTE METING
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis; // Reset de timer
+
+    float volts = analogRead(distanceSensorZ);// Value van de sensor in var zetten
+  
+    // PRINT AFSTAND NAAR SERIELE MONITOR
+    Serial.print("Afstand vork: "); Serial.println(volts); //distance is tussen 650 en 300
+    
+    if(volts > 646){
+      achterSafe = true;
+      uitgeschoven = false;
+      //Serial.println("achter");
+    }
+    if (volts < 310){
+      voorSafe = true;
+      //Serial.println("voor");
+    }
+    if ( volts > 311 && volts < 645){ // NIet compleet accuraat, bijwerken
+      //Serial.println("tussen 300 en 640");
+      voorSafe = false;
+      achterSafe = false;
+   }
+    if (volts < 645){
+      uitgeschoven = true;
+   } 
+
+  //  if (uitgeschoven == true){
+  //     Serial.println("   uitgeschoven");
+  //  }else{
+  //     Serial.println("niet uitgeschoven");
+  //  }
+  }
+} 
+
+// SCHAP SENSOREN
+void leesDistanceSchap(){
+  unsigned long currentMillis = millis(); // Haal de huidige tijd op
+
+  // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis; // Reset de timer
+
+    float afstandLinks = analogRead(distanceSensorL); //Value van de sensor in var zetten
+    float afstandRechts = analogRead(distanceSensorR); //Value van de sensor in var zetten
+  
+    // Print de afstand naar de seriële monitor
+    // Serial.print("Afstand links: "); Serial.print(afstandLinks); Serial.print(" & rechts: "); Serial.println(afstandRechts);
+
+    if(afstandLinks < 250 || afstandRechts < 250){
+      Serial.println("NOODSTOP");
+      noodstop = true;
+    }
+  }
 }
