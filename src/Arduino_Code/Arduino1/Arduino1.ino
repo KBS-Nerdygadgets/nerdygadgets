@@ -106,7 +106,7 @@ void loop() {
   activeerStatus();
   comm1naar2();
   //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
-  Serial.println(Xencoder);
+  // Serial.print("Pulsen"); Serial.println(Xencoder);
 }
 
 //*Functies voor communicatie tussen Arduinos
@@ -126,14 +126,14 @@ void comm1naar2(){
   }
   if (chPos > 0) { // Check if there is any received data
     cString[chPos] = '\0'; // Terminate cString
-    Serial.print(cString);
+    // Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
 }
 // Function to transmit a message over the serial connection
 void sendMessage(const char* message) {
   digitalWrite(greenLED, HIGH);
-  link.println(message);
+  // link.println(message);
   //Serial.println(message); // Print to local screen for debugging
   digitalWrite(greenLED, LOW);
 }
@@ -163,6 +163,7 @@ void activeerStatus(){
     gaNaarCoordinaat(3);
   }
 }
+
 
 //*Functies voor statussen
 void gaNaarCoordinaat(int coordinaatIndex){
@@ -208,27 +209,35 @@ void leesJoystick() {
 
 void geefRichting() {
   richting = "";
-  //Joystick naar rechts
-  if (xValue > 700) {
+  // Joystick naar rechts
+  if (xValue > 700 && metaalRechts == false) {
     richting += "1";
   }
-  //Joystick naar links
-  if (xValue < 300) {
+
+  // Joystick naar links
+  if (xValue < 300 && metaalLinks == false) {
     richting += "2";
   }
-  //Joystick naar boven
-  if (yValue > 700) {
+
+  // Joystick naar boven
+  if (yValue > 700 && drukSwitchBeneden == false) {
     richting += "3";
   }
-  //Joystick naar beneden
-  if (yValue < 300) {
+
+  // Joystick naar beneden
+  if (yValue < 300 && drukSwitchBoven == false) {
     richting += "4";
   }
-  //Stop
+
+  // Stop
   if (richting == "") {
     richting += "0";
   }
+
+  //Serial.println(richting);
 }
+
+
 
 void handmatigBewegen() {
   //Zet de string om in een Int
