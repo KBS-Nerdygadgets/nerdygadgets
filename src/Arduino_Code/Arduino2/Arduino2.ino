@@ -5,47 +5,63 @@
 // *** ORANJE ARDUINO *** //
 ////////////////////////////
 
-//Motorpins voor motor z-as
-const int pwmA = 3;
-const int dirA = 12;
 
-// Afstandsensorpin voor z-as
-const int distanceSensorZ = A3;
+// *** ALLE PINS *** //
+  // Pins ledjes
+  const int redLED = 8;
+  const int yellowLED = 11;
+  const int greenLED1 = 13;
 
-// Afstandsensorenpins voor magazijn
-const int distanceSensorL = A4;
-const int distanceSensorR = A5;
+  //Motorpins voor motor z-as
+  const int pwmA = 3;
+  const int dirA = 12;
 
-// y-as van de joystick
-int yValue = 0;
-int snelheid = 255;
+  // Afstandsensorpin voor z-as
+  const int distanceSensorZ = A3;
 
-//variabel voor afstandsensor
-bool voorSafe = false;
-bool achterSafe = false;
+  // Afstandsensorenpins voor magazijn
+  const int distanceSensorL = A4;
+  const int distanceSensorR = A5;
 
-// Variable voor uitgeschovend detectie
-bool uitgeschoven = false;
+  // Noodstop knoppen
+  const int buttonNoodStop = 5;
+  const int buttonNoodStopReset = 6;
 
-// NOODSTOP
-bool noodstop = false;
+// *** VARIABLEN *** ///
+  // Modus
+  enum Modus {STOP, HANDMATIG, AUTOMATISCH};
+  Modus huidigeModus = HANDMATIG;
 
-int aantalProducten = 0;
-int tijd = 0;
-int delayOmhoog = 800;
+  // y-as van de joystick
+  int yValue = 0;
+  int snelheid = 255;
 
-bool bijCoordinaat = true;
-bool omhoogGegaan = false;
+  //variabel voor afstandsensor
+  bool voorSafe = false;
+  bool achterSafe = false;
 
-//seriele communicatie
-SoftwareSerial link(7, 10);  // Rx, Tx
-byte greenLED = 12;
-char cString[20];
-byte chPos = 0;
-unsigned long sendmessageMillis = 0;
+  // Variable voor uitgeschovend detectie
+  bool uitgeschoven = false;
 
-String firstThreeChars;
-//seriele communicatie end
+  // NOODSTOP
+  bool noodStop = false;
+
+  int aantalProducten = 0;
+  int tijd = 0;
+  int delayOmhoog = 800;
+
+  bool bijCoordinaat = true;
+  bool omhoogGegaan = false;
+
+// *** seriele communicatie *** //
+  SoftwareSerial link(7, 10);  // Rx, Tx
+  byte greenLED = 12;
+  char cString[20];
+  byte chPos = 0;
+  unsigned long sendmessageMillis = 0;
+
+  String firstThreeChars;
+// *** seriele communicatie end *** //
 
 void setup() {
   // put your setup code here, to run once:
@@ -58,10 +74,21 @@ void setup() {
   pinMode(dirA, OUTPUT);
   Serial.println(yValue);
 
-    //pinMode afstandsensoren
+  //pinMode afstandsensoren
   pinMode(distanceSensorZ, INPUT);
   pinMode(distanceSensorL, INPUT);
   pinMode(distanceSensorR, INPUT);
+
+  // Button noodstopreset
+  pinMode(buttonNoodStopReset, INPUT_PULLUP);
+  pinMode(buttonNoodStop, INPUT_PULLUP);
+
+  // Ledjes
+  pinMode(redLED, OUTPUT);
+  pinMode(yellowLED, OUTPUT);
+  pinMode(greenLED1, OUTPUT);
+
+  updateLEDs();
   
   Serial.begin(9600);
 
@@ -77,6 +104,10 @@ void loop() {
   leesDistanceSensorZ();
   leesDistanceSchap();
   handmatigBewegen();
+  noodStopInitiatie();
+  noodstopReset();
+
+
   //if(bijCoordinaat == true) {
   //  pakProduct();
   //}
@@ -125,20 +156,23 @@ void leesJoystick() {
 }
 
 void handmatigBewegen() {
-  leesJoystick();
-  //Achteruit
-  if (yValue > 700) {
-    analogWrite(pwmA, 127);
-    digitalWrite(dirA, HIGH);
-  }
-  //Vooruit
-  else if (yValue < 300) {
-    analogWrite(pwmA, 127);
-    digitalWrite(dirA, LOW);
-  }
+  if(noodStop == false){
+    leesJoystick();
+    // Achteruit
+    if (yValue > 700 && achterSafe == false ) {
+      analogWrite(pwmA, 127);
+      digitalWrite(dirA, HIGH);
+    }
+    // Vooruit
+    else if (yValue < 300 && voorSafe == false) {
+      analogWrite(pwmA, 127);
+      digitalWrite(dirA, LOW);
+    }
 
-  else {
-    analogWrite(pwmA, LOW);
+    // Stop
+    else {
+      analogWrite(pwmA, LOW);
+    }
   }
 }
 
@@ -187,7 +221,7 @@ void leesDistanceSensorZ(){
     float volts = analogRead(distanceSensorZ);// Value van de sensor in var zetten
   
     // PRINT AFSTAND NAAR SERIELE MONITOR
-    Serial.print("Afstand vork: "); Serial.println(volts); //distance is tussen 650 en 300
+    //Serial.print("Afstand vork: "); Serial.println(volts); //distance is tussen 650 en 300
     
     if(volts > 646){
       achterSafe = true;
@@ -206,32 +240,81 @@ void leesDistanceSensorZ(){
     if (volts < 645){
       uitgeschoven = true;
    } 
-
-  //  if (uitgeschoven == true){
-  //     Serial.println("   uitgeschoven");
-  //  }else{
-  //     Serial.println("niet uitgeschoven");
-  //  }
   }
 } 
 
+unsigned long previousMillis2 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
+const unsigned long interval2 = 200; // Interval van 100 milliseconden
 // SCHAP SENSOREN
 void leesDistanceSchap(){
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
 
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis; // Reset de timer
+  if (currentMillis - previousMillis2 >= interval2) {
+    previousMillis2 = currentMillis; // Reset de timer
 
     float afstandLinks = analogRead(distanceSensorL); //Value van de sensor in var zetten
     float afstandRechts = analogRead(distanceSensorR); //Value van de sensor in var zetten
   
     // Print de afstand naar de seriële monitor
-    // Serial.print("Afstand links: "); Serial.print(afstandLinks); Serial.print(" & rechts: "); Serial.println(afstandRechts);
+     //Serial.print("Afstand links: "); Serial.print(afstandLinks); Serial.print(" & rechts: "); Serial.println(afstandRechts);
 
     if(afstandLinks < 250 || afstandRechts < 250){
       Serial.println("NOODSTOP");
-      noodstop = true;
+      noodStop = true;
+      huidigeModus = STOP; updateLEDs(); // Ledjes veranderen en updaten
     }
+  }
+}
+
+// Noodstop reset
+// void noodstopReset(){
+//   if(knop ingedrukt?? && afstandLinks > 250 && afstandRechts > 250){
+//       noodstop = false;
+//       huidigeModus = HANDMATIG; updateLEDs(); // Ledjes veranderen en updaten
+//       delay(100);
+//   }
+// }
+
+// STOPLICHT LAMPIES
+void updateLEDs() {
+  // Turn off all LEDs
+  digitalWrite(redLED, LOW);
+  digitalWrite(yellowLED, LOW);
+  digitalWrite(greenLED, LOW);
+
+  // LAMPJES SWITCHEN
+  switch (huidigeModus) {
+    case STOP:
+      digitalWrite(redLED, HIGH);
+      break;
+    case HANDMATIG:
+      digitalWrite(yellowLED, HIGH);
+      break;
+    case AUTOMATISCH:
+      digitalWrite(greenLED, HIGH);
+      break;
+  }
+}
+
+void noodstopReset() {
+  float afstandLinks = analogRead(distanceSensorL); //Value van de sensor in var zetten
+  float afstandRechts = analogRead(distanceSensorR); //Value van de sensor in var zetten
+  bool noodStopReset = digitalRead(buttonNoodStopReset);
+  
+  if(noodStopReset == LOW && afstandLinks > 250 && afstandRechts > 250){
+    if(noodStop == true){
+      noodStop = false;
+      huidigeModus = HANDMATIG; updateLEDs(); // Ledjes veranderen en updaten
+      // Ga naar begin punt functie hier
+    }
+  }
+}
+void noodStopInitiatie(){
+  bool noodStopStart = digitalRead(buttonNoodStop);
+  if(noodStopStart == LOW){
+    Serial.println("Testknop");
+    noodStop = true;
+    huidigeModus = STOP; updateLEDs(); // Ledjes veranderen en updaten
   }
 }
