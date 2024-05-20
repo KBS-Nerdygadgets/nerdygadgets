@@ -129,6 +129,10 @@ void comm1naar2(){
     // Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
+  //NADER TE BEPALEN, SERIAL READ VAN HMI PURPOSES, NOG NIET AANKOMEN :)
+  //if (input.substring(0, 3) == 1:1) { //iets als de eerste 3 karakters over serial 001 zijn. je kunt dit aanpassen zolang het een nummer is
+  //    //Serial.print("success");  //print voor debugging
+  //  }
 }
 // Function to transmit a message over the serial connection
 void sendMessage(const char* message) {
