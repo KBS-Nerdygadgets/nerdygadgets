@@ -24,6 +24,7 @@ const int dirA = 12;
 const int XencoderPin = 2;
 const int XrichtingPin = 4;
 int Xencoder = 0;
+int Yencoder = 0;
 int xValue = 0; // To store value of the X axis
 
 //Yas
@@ -46,6 +47,7 @@ const int knopSwitchStatus = 6;
 
 //Status
 enum Modus {STOP, HANDMATIG, AUTOMATISCH};
+Modus huidigeModus = HANDMATIG;
 
 int status = 1;
 String richting = "";
@@ -127,16 +129,21 @@ void setup() {
 
 //*Loop
 void loop() {
-  // leesMicroSwitches();
-  handmatigeStatus();
+  functiesSensoren();
+  switch(huidigeModus){
+    case HANDMATIG:
+      handmatigeStatus();
+      break;
+    case STOP:
+      //functies noodstop
+      break;
+    case AUTOMATISCH:
+      //functies automatisch
+      break;
+  }
   serialRead();
-  // Serial.println(Xencoder);
-  leesMicroSwitches();
-  leesInductiveSensoren();
-  activeerStatus();
+  // Serial.println(Yencoder);
   comm1naar2();
-  //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
-  // Serial.print("Pulsen"); Serial.println(Xencoder);
 }
 
 //*Functies voor communicatie tussen Arduinos
@@ -153,6 +160,7 @@ void comm1naar2(){
 void serialRead() {
   while (link.available()) {
     char ch = link.read();
+
     if (chPos < sizeof(cString) - 1) { // Avoid buffer overflow
       cString[chPos++] = ch;
     }
@@ -176,32 +184,6 @@ void serialWrite(String message) {
 void sendMessage(const char* message) {
   link.println(message);
   //Serial.println(message); // Print to local screen for debugging
-}
-
-//*Functies voor de knoppen
-//Lees of de 2 knoppen zijn ingedrukt
-void activeerStatus(){
-  status = 1;
-
-  //Encoder wordt gereset;
-  if(digitalRead(resetKnopEncoder) == 0){
-    Xencoder = 0;
-  }
-
-  //Status wordt op automatisch gezet
-  if(digitalRead(knopSwitchStatus) == 0){
-      status = 2;
-  }
-
-  //Als knop niet is ingedrukt 
-  if(status == 1){
-    handmatigeStatus();
-  }
-
-  //Hou de bovenste knop ingedrukt om de automatische mode te activeren
-  else if(status == 2){
-    gaNaarCoordinaat(3);
-  }
 }
 
 //*Functies voor statussen
@@ -350,7 +332,6 @@ void handmatigBewegen() {
 //*Functies voor sensoren
 unsigned long previousMillis = 0; // Variabele om de tijd bij te houden van de laatste keer dat de microswitches zijn gelezen
 const unsigned long interval = 300; // Interval van 100 milliseconden
-
 void leesMicroSwitches(){
   // Haal de huidige tijd op
   unsigned long currentMillis = millis();
@@ -368,7 +349,8 @@ void leesMicroSwitches(){
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
       Serial.println("Switch beneden is ingedrukt!");
-      drukSwitchBeneden = true; 
+      drukSwitchBeneden = true;
+      Yencoder = 0; //Yas bevind zich bij nulpunt, reset encoder voor accuraatheid
     }
     if (switch2State == HIGH) {
       Serial.println("Switch boven is ingedrukt!");
@@ -384,7 +366,6 @@ void leesMicroSwitches(){
 
 unsigned long previousMillis2 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de microswitches zijn gelezen
 const unsigned long interval2 = 300; // Interval van 100 milliseconden
-
 void leesInductiveSensoren(){
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
 
@@ -399,18 +380,23 @@ void leesInductiveSensoren(){
     // Controleer of een van de schakelaars geactiveerd is
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
-    Serial.println("Nabijheid gedetecteerd aan de linkerkant");
-    metaalLinks = true;
+      Serial.println("Nabijheid gedetecteerd aan de linkerkant");
+      metaalLinks = true;
+      Xencoder = 0; //Xas bevind zich bij nulpunt, reset encoder voor accuraatheid
     }
     if (indRechtsState == LOW) {
-    Serial.println("Nabijheid gedetecteerd aan de rechterkant");
-    metaalRechts = true;
+      Serial.println("Nabijheid gedetecteerd aan de rechterkant");
+      metaalRechts = true;
     } 
     if (indLinksState == HIGH && indRechtsState == HIGH) {
     //Serial.println("testmetaal");
-    metaalLinks = false;
-    metaalRechts = false;
+      metaalLinks = false;
+      metaalRechts = false;
     }
   }
 }
 
+void functiesSensoren(){
+  leesMicroSwitches();
+  leesInductiveSensoren();
+}
