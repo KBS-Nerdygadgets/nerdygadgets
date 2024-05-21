@@ -60,25 +60,25 @@ const int coordinaten[25][2] = {
   {911, 125},   //5:2
   {1664, 125},  //5:3
   {2417, 125},  //5:4
-  {3170, 125},   //5:5
+  {3170, 125},  //5:5
 
   {155, 542},   //4:1
   {911, 542},   //4:2
   {1664, 542},  //4:3
   {2417, 542},  //4:4
-  {3170, 542},   //4:5
+  {3170, 542},  //4:5
 
   {155, 960},   //3:1
   {911, 960},   //3:2
   {1664, 960},  //3:3
   {2417, 960},  //3:4
-  {3170, 960},   //3:5
+  {3170, 960},  //3:5
 
   {155, 1377},   //2:1
   {911, 1377},   //2:2
   {1664, 1377},  //2:3
   {2417, 1377},  //2:4
-  {3170, 1377},   //2:5
+  {3170, 1377},  //2:5
 
   {155, 1796},   //1:1
   {911, 1796},   //1:2
@@ -144,11 +144,8 @@ void loop() {
       break;
   }
   serialRead();
-  serialWrite(eenNaarTwee);
   // Serial.println(Yencoder);
-  // Serial.println(Xencoder);
-  activeerStatus();
-  leesYencoder();
+  serialWrite(eenNaarTwee);
 }
 
 void leesYencoder() {
@@ -379,7 +376,6 @@ void leesMicroSwitches(){
 
 unsigned long previousMillis2 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de microswitches zijn gelezen
 const unsigned long interval2 = 300; // Interval van 100 milliseconden
-
 void leesInductiveSensoren(){
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
 
