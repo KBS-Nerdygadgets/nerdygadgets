@@ -1,15 +1,21 @@
 package Database;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import TSP.Point;
 
 public class Database {
-    public static void main(String[] args) {
+    public static List<Point> fetchPointsFromDatabase() {
+        List<Point> points = new ArrayList<>();
+
         // JDBC Connection Parameters
         String url = "jdbc:mysql://localhost:3306/nerdygadgets";
         String username = "root";
         String password = "";
 
         // SQL query
-        String query = "SELECT * FROM orderlines";
+        String query = "SELECT * FROM warehouse";
 
         try {
             // Establish connection
@@ -24,12 +30,12 @@ public class Database {
             // Process results
             while (resultSet.next()) {
                 // Retrieve data from the result set
-                int id = resultSet.getInt("OrderID");
-                String description = resultSet.getString("Description");
-                // Retrieve other columns as needed
+                int x = resultSet.getInt("X");
+                int y = resultSet.getInt("Y");
 
-                // Process data
-                System.out.println("ID: " + id + ", Description: " + description);
+                // Create a new Point object and add it to the list
+                Point point = new Point(x, y);
+                points.add(point);
             }
 
             // Exit resources
@@ -39,5 +45,7 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        return points;
     }
 }
