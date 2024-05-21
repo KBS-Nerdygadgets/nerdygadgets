@@ -111,17 +111,24 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  // leesJoystick();
-  leesDistanceSensorZ();
-  leesDistanceSchap();
-  handmatigBewegen();
+  functiesSensoren();
+  switch(huidigeModus){
+    case HANDMATIG:
+      handmatigBewegen();
+      break;
+    case STOP:
+      noodstopReset();
+      break;
+    case AUTOMATISCH:
+      //functies automatisch
+      break;
+  }
+
   encoderInString();
   Serial.println(Yencoder);
   serialWrite(tweeNaarEen);
   serialRead();
   functiesStatussen();
-  
 }
 
 void sendMessage(const char* message) {
@@ -251,7 +258,9 @@ void encoderInString() {
     }
   }
   else {
-    tweeNaarEen = "000000";
+    for(int i = 1; i < 5; i++){
+      tweeNaarEen.setCharAt(i, 48);
+    }
   }
 }
 
@@ -309,10 +318,16 @@ void leesDistanceSchap(){
 
     if(afstandLinks < 250 || afstandRechts < 250){
       Serial.println("NOODSTOP");
+      analogWrite(pwmA, 0);
       noodStop = true;
       huidigeModus = STOP; updateLEDs(); // Ledjes veranderen en updaten
     }
   }
+}
+
+void functiesSensoren(){
+  leesDistanceSensorZ();
+  leesDistanceSchap();
 }
 
 //*Statussen
@@ -327,18 +342,22 @@ void updateLEDs() {
   switch (huidigeModus) {
     case STOP:
       digitalWrite(redLED, HIGH);
+      digitalWrite(yellowLED, LOW);
+      digitalWrite(greenLED1, LOW);
       noodStop = true;
       automatisch = false;
       handmatig = false;
       break;
     case HANDMATIG:
       digitalWrite(yellowLED, HIGH);
+      digitalWrite(greenLED1, LOW);
       handmatig = true;
       noodStop = false;
       automatisch = false;
       break;
     case AUTOMATISCH:
-      digitalWrite(greenLED, HIGH);
+      digitalWrite(greenLED1, HIGH);
+      digitalWrite(yellowLED, LOW);
       automatisch = true;
       handmatig = false;
       noodStop = false;
@@ -369,28 +388,28 @@ void noodStopInitiatie(){
 
 void stuurStatus(){
   switch (huidigeModus) {
-  case STOP:
-    tweeNaarEen.setCharAt(5, 48); //Set getal 0
-    break;
-  case HANDMATIG:
-    tweeNaarEen.setCharAt(5, 49); //Set getal 1
-    break;
-  case AUTOMATISCH:
-    tweeNaarEen.setCharAt(5, 50); //Set getal 2
-    break;
+    case STOP:
+      tweeNaarEen.setCharAt(5, 48); //Set getal 0
+      break;
+    case HANDMATIG:
+      tweeNaarEen.setCharAt(5, 49); //Set getal 1
+      break;
+    case AUTOMATISCH:
+      tweeNaarEen.setCharAt(5, 50); //Set getal 2
+      break;
   }
 }
 
 //Gebruikt de bovenste gele knop om tussen handmatige en automatische mode te wisselen
 unsigned long previousMillis3 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
-const unsigned long interval3 = 200; // Interval van 200 milliseconden
+const unsigned long interval3 = 150; // Interval van 200 milliseconden
 void setStatus(){
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
   if (currentMillis - previousMillis3 >= interval3) {
-    previousMillis2 = currentMillis; // Reset de timer
-    bool setStatusBool = digitalRead(buttonSetStatus);
-    if(setStatusBool == LOW){
+    previousMillis3 = currentMillis; // Reset de timer
+    bool setStatusBool = digitalRead(buttonNoodStopReset);
+    if(setStatusBool == LOW && noodStop == false){
       switch (huidigeModus) {
         case HANDMATIG:
           huidigeModus = AUTOMATISCH; updateLEDs();
@@ -407,6 +426,6 @@ void setStatus(){
 void functiesStatussen(){
   noodStopInitiatie();
   noodstopReset();
-  // setStatus();
+  setStatus();
   stuurStatus();
 }
