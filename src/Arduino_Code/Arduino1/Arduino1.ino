@@ -3,6 +3,10 @@
 #define VRX_PIN  A2 // Arduino pin connected to VRX pin
 #define VRY_PIN  A3 // Arduino pin connected to VRY pin
 
+////////////////////////////
+// *** GROENE ARDUINO *** //
+////////////////////////////
+
 //seriele communicatie
 SoftwareSerial link(7, 10); // Rx, Tx
 byte greenLED = 12;
@@ -28,7 +32,15 @@ const int dirB = 13;
 const int brakeB = 8;
 int yValue = 0; // To store value of the Y axis
 
-//Knoppen
+//Pins van de microswitches, ms = microswitch
+const int msBeneden = A5;
+const int msBoven = A4;
+
+//Pins van de inductive (metaal)sensoren, ind = inductive
+const int indLinks = 6;
+const int indRechts = 5;
+
+//Knoppen, hebben nu dezelfde pins als metaalsensor, moeten worden veranderd (nu niet aangesloten)
 const int resetKnopEncoder = 5;
 const int knopSwitchStatus = 6;
 
@@ -43,14 +55,6 @@ const int coordinaten[5][2] = {
   {2417, 0},  //5:4
   {3170, 0}   //5:5
 };
-
-//Pins van de microswitches, ms = microswitch
-int msBeneden = A4;
-int msBoven =  A5;
-
-//Pins van de inductive (metaal)sensoren, ind = inductive
-int indLinks = 5;
-int indRechts = 6;
 
 //Uiteinde sensoren variablen
 bool drukSwitchBoven = false;
@@ -102,7 +106,7 @@ void loop() {
   activeerStatus();
   comm1naar2();
   //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
-  Serial.println(Xencoder);
+  // Serial.print("Pulsen"); Serial.println(Xencoder);
 }
 
 //*Functies voor communicatie tussen Arduinos
@@ -122,14 +126,14 @@ void comm1naar2(){
   }
   if (chPos > 0) { // Check if there is any received data
     cString[chPos] = '\0'; // Terminate cString
-    Serial.print(cString);
+    // Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
 }
 // Function to transmit a message over the serial connection
 void sendMessage(const char* message) {
   digitalWrite(greenLED, HIGH);
-  link.println(message);
+  // link.println(message);
   //Serial.println(message); // Print to local screen for debugging
   digitalWrite(greenLED, LOW);
 }
@@ -159,6 +163,7 @@ void activeerStatus(){
     gaNaarCoordinaat(3);
   }
 }
+
 
 //*Functies voor statussen
 void gaNaarCoordinaat(int coordinaatIndex){
@@ -204,27 +209,35 @@ void leesJoystick() {
 
 void geefRichting() {
   richting = "";
-  //Joystick naar rechts
-  if (xValue > 700) {
+  // Joystick naar rechts
+  if (xValue > 700 && metaalRechts == false) {
     richting += "1";
   }
-  //Joystick naar links
-  if (xValue < 300) {
+
+  // Joystick naar links
+  if (xValue < 300 && metaalLinks == false) {
     richting += "2";
   }
-  //Joystick naar boven
-  if (yValue > 700) {
+
+  // Joystick naar boven
+  if (yValue > 700 && drukSwitchBeneden == false) {
     richting += "3";
   }
-  //Joystick naar beneden
-  if (yValue < 300) {
+
+  // Joystick naar beneden
+  if (yValue < 300 && drukSwitchBoven == false) {
     richting += "4";
   }
-  //Stop
+
+  // Stop
   if (richting == "") {
     richting += "0";
   }
+
+  //Serial.println(richting);
 }
+
+
 
 void handmatigBewegen() {
   //Zet de string om in een Int
@@ -298,52 +311,68 @@ void handmatigBewegen() {
 }
 
 //*Functies voor sensoren
-void leesMicroSwitches(){
-  // Lees de status van de schakelaars
-  bool switch1State = digitalRead(msBeneden);
-  bool switch2State = digitalRead(msBoven);
-  
-  // Controleer of een van de schakelaars geactiveerd is
-  if (switch1State == HIGH || switch2State == HIGH) {
-    // Als een van de schakelaars geactiveerd is, stop de motor
-    digitalWrite(pwmB, LOW);
+unsigned long previousMillis = 0; // Variabele om de tijd bij te houden van de laatste keer dat de microswitches zijn gelezen
+const unsigned long interval = 300; // Interval van 100 milliseconden
 
+void leesMicroSwitches(){
+  // Haal de huidige tijd op
+  unsigned long currentMillis = millis();
+  
+  // Controleer of er 100 milliseconden zijn verstreken sinds de laatste keer dat de microswitches zijn gelezen
+  if (currentMillis - previousMillis >= interval) {
+    // Reset de timer
+    previousMillis = currentMillis;
+    
+    // Lees de status van de schakelaars
+    bool switch1State = digitalRead(msBeneden);
+    bool switch2State = digitalRead(msBoven);
+    
+    // Controleer of een van de schakelaars geactiveerd is
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
-      Serial.println("Switch beneden is ingedrukt!");
+      //Serial.println("Switch beneden is ingedrukt!");
       drukSwitchBeneden = true; 
     }
     if (switch2State == HIGH) {
-      Serial.println("Switch boven is ingedrukt!");
+      //Serial.println("Switch boven is ingedrukt!");
       drukSwitchBoven = true; 
     }
-  } else {
-    drukSwitchBoven = false;
-    drukSwitchBeneden = false;
+    if (switch1State == LOW && switch2State == LOW) {
+     //Serial.println("testmicro");
+     drukSwitchBoven = false;
+     drukSwitchBeneden = false;
+    }
   }
 }
 
-void leesInductiveSensoren(){
-  // Lees de status van de schakelaars
-  bool indLinksState = digitalRead(indLinks);
-  bool indRechtsState = digitalRead(indRechts);
-  
-  // Controleer of een van de schakelaars geactiveerd is
-  if (indLinksState == LOW || indRechtsState == LOW) {
-    // Als een van de schakelaars geactiveerd is, stop de motor
-    digitalWrite(pwmB, LOW);
+unsigned long previousMillis2 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de microswitches zijn gelezen
+const unsigned long interval2 = 300; // Interval van 100 milliseconden
 
+void leesInductiveSensoren(){
+  unsigned long currentMillis = millis(); // Haal de huidige tijd op
+
+  // Controleer of er 100 milliseconden zijn verstreken sinds de laatste keer dat de microswitches zijn gelezen
+  if (currentMillis - previousMillis2 >= interval2) {
+    previousMillis2 = currentMillis; // Reset de timer
+     
+    // Lees de status van de schakelaars
+    bool indLinksState = digitalRead(indLinks);
+    bool indRechtsState = digitalRead(indRechts);
+  
+    // Controleer of een van de schakelaars geactiveerd is
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
-    Serial.println("Nabijheid gedetecteerd aan de linkerkant");
+    //Serial.println("Nabijheid gedetecteerd aan de linkerkant");
     metaalLinks = true;
     }
     if (indRechtsState == LOW) {
-    Serial.println("Nabijheid gedetecteerd aan de rechterkant");
+    //Serial.println("Nabijheid gedetecteerd aan de rechterkant");
     metaalRechts = true;
     } 
-  } else {
+    if (indLinksState == HIGH && indRechtsState == HIGH) {
+    //Serial.println("testmetaal");
     metaalLinks = false;
     metaalRechts = false;
+    }
   }
 }
