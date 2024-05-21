@@ -127,16 +127,25 @@ void setup() {
 
 //*Loop
 void loop() {
-  // leesMicroSwitches();
   handmatigeStatus();
   serialRead();
   // Serial.println(Xencoder);
   leesMicroSwitches();
   leesInductiveSensoren();
   activeerStatus();
-  comm1naar2();
+  leesYencoder();
+
   //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
   // Serial.print("Pulsen"); Serial.println(Xencoder);
+}
+
+void leesYencoder() {
+                                                          //belangrijk stukje
+  String input = cString;
+  int Yencoder = input.substring(1, 5).toInt();
+  delay(20);
+  Serial.println(Yencoder);
+                                                        //belangrijk stukje einde
 }
 
 //*Functies voor communicatie tussen Arduinos
@@ -159,7 +168,6 @@ void serialRead() {
   }
   if (chPos > 0) { // Check if there is any received data
     cString[chPos] = '\0'; // Terminate cString
-    Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
 }
