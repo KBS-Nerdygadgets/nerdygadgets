@@ -62,7 +62,7 @@ public class ControlPanel extends JPanel{
         bottomPanelBottom.setPreferredSize(new Dimension(bottomPanelDimension.width, bottomPanelDimension.height/10*5));
 
         //Het legend label wordt aangemaakt
-        legendLabel = new JLabel("Legend");
+        legendLabel = new JLabel("Legenda");
         legendLabel.setForeground(foregroundColor);
         legendLabel.setFont(new Font(schapLabel.getFont().getName(), Font.PLAIN, bottomPanelLabelSize));
         legendLabel.setHorizontalAlignment(SwingConstants.CENTER);

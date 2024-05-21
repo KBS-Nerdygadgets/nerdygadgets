@@ -1,0 +1,11 @@
+uno 1 naar 2:
+aaa
+
+a = gewenste afstand vork
+
+
+uno 2 naar 1:
+aaabbbb
+
+a = afstand vork
+b = pulsen van de encoder van de y as

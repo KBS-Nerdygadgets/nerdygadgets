@@ -20,8 +20,8 @@ public class GUIManager extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         setBackground(darkGray);
-        ImageIcon windesheim = new ImageIcon("src/KBS_HMI_Applicatie/Icons/windesheim.png");
-        setIconImage(windesheim.getImage());
+        ImageIcon logo = new ImageIcon("src/KBS_HMI_Applicatie/Icons/logo.png");
+        setIconImage(logo.getImage());
 
         //De verschillende panelen worden aangemaakt
         scmPanel = new SerialPanel(new Dimension(dimension.width, 65));
