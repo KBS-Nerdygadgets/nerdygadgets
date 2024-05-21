@@ -149,12 +149,12 @@ void loop() {
 }
 
 void leesYencoder() {
-                                                          //belangrijk stukje
+  //belangrijk stukje
   String input = cString;
   int Yencoder = input.substring(1, 5).toInt();
   delay(20);
   Serial.println(Yencoder);
-                                                        //belangrijk stukje einde
+  //belangrijk stukje einde
 }
 
 //*Functies voor communicatie tussen Arduinos

@@ -403,12 +403,14 @@ void stuurStatus(){
 //Gebruikt de bovenste gele knop om tussen handmatige en automatische mode te wisselen
 unsigned long previousMillis3 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
 const unsigned long interval3 = 150; // Interval van 200 milliseconden
+
 void setStatus(){
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
   if (currentMillis - previousMillis3 >= interval3) {
     previousMillis3 = currentMillis; // Reset de timer
     bool setStatusBool = digitalRead(buttonNoodStopReset);
+    
     if(setStatusBool == LOW && noodStop == false){
       switch (huidigeModus) {
         case HANDMATIG:
