@@ -23,7 +23,6 @@ bool omhoogGegaan = true;
 
 //seriele communicatie
 SoftwareSerial link(7, 10);  // Rx, Tx
-byte greenLED = 12;
 char cString[20];
 byte chPos = 0;
 unsigned long sendmessageMillis = 0;
@@ -48,7 +47,6 @@ void setup() {
 
   //seriele communicatie
   link.begin(9600);
-  pinMode(greenLED, OUTPUT);
   //seriele communicatie end
 }
 
@@ -75,10 +73,8 @@ void loop() {
 
 //seriele communicatie
 void sendMessage(const char* message) {
-  digitalWrite(greenLED, HIGH);
   link.println(message);
   //Serial.println(message); // Print to local screen for debugging
-  digitalWrite(greenLED, LOW);
 }
 //seriele communicatie end
 
@@ -281,7 +277,7 @@ void updateLEDs() {
   // Turn off all LEDs
   digitalWrite(redLED, LOW);
   digitalWrite(yellowLED, LOW);
-  digitalWrite(greenLED, LOW);
+  digitalWrite(greenLED1, LOW);
 
   // LAMPJES SWITCHEN
   switch (huidigeModus) {
