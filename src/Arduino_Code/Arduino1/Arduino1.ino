@@ -144,8 +144,20 @@ void loop() {
       break;
   }
   serialRead();
-  // Serial.println(Yencoder);
   serialWrite(eenNaarTwee);
+  // Serial.println(Yencoder);
+  // Serial.println(Xencoder);
+  activeerStatus();
+  leesYencoder();
+}
+
+void leesYencoder() {
+                                                          //belangrijk stukje
+  String input = cString;
+  int Yencoder = input.substring(1, 5).toInt();
+  delay(20);
+  Serial.println(Yencoder);
+                                                        //belangrijk stukje einde
 }
 
 //*Functies voor communicatie tussen Arduinos
@@ -169,7 +181,6 @@ void serialRead() {
   }
   if (chPos > 0) { // Check if there is any received data
     cString[chPos] = '\0'; // Terminate cString
-    Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
 }
@@ -368,6 +379,7 @@ void leesMicroSwitches(){
 
 unsigned long previousMillis2 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de microswitches zijn gelezen
 const unsigned long interval2 = 300; // Interval van 100 milliseconden
+
 void leesInductiveSensoren(){
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
 
