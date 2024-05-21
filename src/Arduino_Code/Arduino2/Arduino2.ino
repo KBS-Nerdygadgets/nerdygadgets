@@ -14,65 +14,61 @@ int yValue = 0;
 int snelheid = 255;
 
 // *** ALLE PINS *** //
-  // Pins ledjes
-  const int redLED = 8;
-  const int yellowLED = 11;
-  const int greenLED1 = 13;
+// Pins ledjes
+const int redLED = 8;
+const int yellowLED = 11;
+const int greenLED1 = 13;
 
-String tweeNaarEen = "00000";
+String tweeNaarEen = "000000";
 
 bool bijCoordinaat = false;
 bool omhoogGegaan = true;
 
-  //Motorpins voor motor z-as
-  const int pwmA = 3;
-  const int dirA = 12;
+//Motorpins voor motor z-as
+const int pwmA = 3;
+const int dirA = 12;
 
-  // Afstandsensorpin voor z-as
-  const int distanceSensorZ = A3;
+// Afstandsensorpin voor z-as
+const int distanceSensorZ = A3;
 
-  // Afstandsensorenpins voor magazijn
-  const int distanceSensorL = A4;
-  const int distanceSensorR = A5;
+// Afstandsensorenpins voor magazijn
+const int distanceSensorL = A4;
+const int distanceSensorR = A5;
 
-  // Noodstop knoppen
-  const int buttonNoodStop = 5;
-  const int buttonNoodStopReset = 6;
+// Noodstop knoppen
+const int buttonNoodStop = 5;
+const int buttonNoodStopReset = 6;
+const int buttonSetStatus = A1;
 
 // *** VARIABLEN *** ///
-  // Modus
-  enum Modus {STOP, HANDMATIG, AUTOMATISCH};
-  Modus huidigeModus = HANDMATIG;
+// Modus
+enum Modus {STOP, HANDMATIG, AUTOMATISCH};
+Modus huidigeModus = HANDMATIG;
 
-  // y-as van de joystick
-  int yValue = 0;
-  int snelheid = 255;
+//variabel voor afstandsensor
+bool voorSafe = false;
+bool achterSafe = false;
 
-  //variabel voor afstandsensor
-  bool voorSafe = false;
-  bool achterSafe = false;
+// Variable voor uitgeschovend detectie
+bool uitgeschoven = false;
 
-  // Variable voor uitgeschovend detectie
-  bool uitgeschoven = false;
+// NOODSTOP
+bool noodStop = false;
+bool handmatig = true;
+bool automatisch = false;
 
-  // NOODSTOP
-  bool noodStop = false;
-
-  int aantalProducten = 0;
-  int tijd = 0;
-  int delayOmhoog = 800;
-
-  bool bijCoordinaat = true;
-  bool omhoogGegaan = false;
+int aantalProducten = 0;
+int tijd = 0;
+int delayOmhoog = 800;
 
 // *** seriele communicatie *** //
-  SoftwareSerial link(7, 10);  // Rx, Tx
-  byte greenLED = 12;
-  char cString[20];
-  byte chPos = 0;
-  unsigned long sendmessageMillis = 0;
+SoftwareSerial link(7, 10);  // Rx, Tx
+byte greenLED = 12;
+char cString[20];
+byte chPos = 0;
+unsigned long sendmessageMillis = 0;
 
-  String firstThreeChars;
+String firstThreeChars;
 // *** seriele communicatie end *** //
 
 void setup() {
@@ -124,21 +120,13 @@ void loop() {
   Serial.println(Yencoder);
   serialWrite(tweeNaarEen);
   serialRead();
-  noodStopInitiatie();
-  noodstopReset();
-  serialWrite();
-  serialRead();
+  functiesStatussen();
+  
 }
 
-
-//seriele communicatie
 void sendMessage(const char* message) {
-  digitalWrite(greenLED, HIGH);
   link.println(message);
-  //Serial.println(message); // Print to local screen for debugging
-  digitalWrite(greenLED, LOW);
 }
-//seriele communicatie end
 
 void leesJoystick() {
   yValue = analogRead(VRY_PIN);
@@ -183,15 +171,11 @@ void pakProduct() {
   delay(tijd);
 
   omhoogGegaan = false;
-  tweeNaarEen.setCharAt(0, 49);
+  tweeNaarEen.setCharAt(0, 49); //Set 1
 
   while (omhoogGegaan == false) {
     analogWrite(pwmA, 0);
-
   }
-
-  
-
   analogWrite(pwmA, snelheid);
   digitalWrite(dirA, HIGH);
   delay(tijd);
@@ -202,6 +186,7 @@ void pakProduct() {
   aantalProducten++;
 }
 
+//*Communicatie
 void serialWrite(String message) {
   // Specify the message to send
   const char* messageToSend = message.c_str(); //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
@@ -266,10 +251,11 @@ void encoderInString() {
     }
   }
   else {
-    tweeNaarEen = "00000";
+    tweeNaarEen = "000000";
   }
 }
 
+//*Sensoren
 unsigned long previousMillis = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
 const unsigned long interval = 200; // Interval van 100 milliseconden
 
@@ -298,10 +284,10 @@ void leesDistanceSensorZ(){
       //Serial.println("tussen 300 en 640");
       voorSafe = false;
       achterSafe = false;
-   }
+  }
     if (volts < 645){
       uitgeschoven = true;
-   } 
+  } 
   }
 } 
 
@@ -329,15 +315,7 @@ void leesDistanceSchap(){
   }
 }
 
-// Noodstop reset
-// void noodstopReset(){
-//   if(knop ingedrukt?? && afstandLinks > 250 && afstandRechts > 250){
-//       noodstop = false;
-//       huidigeModus = HANDMATIG; updateLEDs(); // Ledjes veranderen en updaten
-//       delay(100);
-//   }
-// }
-
+//*Statussen
 // STOPLICHT LAMPIES
 void updateLEDs() {
   // Turn off all LEDs
@@ -349,12 +327,21 @@ void updateLEDs() {
   switch (huidigeModus) {
     case STOP:
       digitalWrite(redLED, HIGH);
+      noodStop = true;
+      automatisch = false;
+      handmatig = false;
       break;
     case HANDMATIG:
       digitalWrite(yellowLED, HIGH);
+      handmatig = true;
+      noodStop = false;
+      automatisch = false;
       break;
     case AUTOMATISCH:
       digitalWrite(greenLED, HIGH);
+      automatisch = true;
+      handmatig = false;
+      noodStop = false;
       break;
   }
 }
@@ -372,11 +359,54 @@ void noodstopReset() {
     }
   }
 }
+
 void noodStopInitiatie(){
   bool noodStopStart = digitalRead(buttonNoodStop);
   if(noodStopStart == LOW){
-    Serial.println("Testknop");
-    noodStop = true;
     huidigeModus = STOP; updateLEDs(); // Ledjes veranderen en updaten
   }
+}
+
+void stuurStatus(){
+  switch (huidigeModus) {
+  case STOP:
+    tweeNaarEen.setCharAt(5, 48); //Set getal 0
+    break;
+  case HANDMATIG:
+    tweeNaarEen.setCharAt(5, 49); //Set getal 1
+    break;
+  case AUTOMATISCH:
+    tweeNaarEen.setCharAt(5, 50); //Set getal 2
+    break;
+  }
+}
+
+//Gebruikt de bovenste gele knop om tussen handmatige en automatische mode te wisselen
+unsigned long previousMillis3 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
+const unsigned long interval3 = 200; // Interval van 200 milliseconden
+void setStatus(){
+  unsigned long currentMillis = millis(); // Haal de huidige tijd op
+  // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
+  if (currentMillis - previousMillis3 >= interval3) {
+    previousMillis2 = currentMillis; // Reset de timer
+    bool setStatusBool = digitalRead(buttonSetStatus);
+    if(setStatusBool == LOW){
+      switch (huidigeModus) {
+        case HANDMATIG:
+          huidigeModus = AUTOMATISCH; updateLEDs();
+          break;
+        case AUTOMATISCH:
+          huidigeModus = HANDMATIG; updateLEDs();
+          break;
+      }
+    }
+  }
+
+}
+
+void functiesStatussen(){
+  noodStopInitiatie();
+  noodstopReset();
+  // setStatus();
+  stuurStatus();
 }

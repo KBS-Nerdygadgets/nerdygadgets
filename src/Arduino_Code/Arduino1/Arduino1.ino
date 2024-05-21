@@ -44,6 +44,9 @@ const int indRechts = 5;
 const int resetKnopEncoder = 5;
 const int knopSwitchStatus = 6;
 
+//Status
+enum Modus {STOP, HANDMATIG, AUTOMATISCH};
+
 int status = 1;
 String richting = "";
 
@@ -125,11 +128,8 @@ void setup() {
 //*Loop
 void loop() {
   // leesMicroSwitches();
-  // leesInductiveSensoren();
   handmatigeStatus();
   serialRead();
-  // comm1naar2();
-  //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
   // Serial.println(Xencoder);
   leesMicroSwitches();
   leesInductiveSensoren();
@@ -148,8 +148,9 @@ void comm1naar2(){
   sendMessage(messageToSend);
   sendmessageMillis = millis();
   }
+}
 
-  void serialRead() {
+void serialRead() {
   while (link.available()) {
     char ch = link.read();
     if (chPos < sizeof(cString) - 1) { // Avoid buffer overflow
@@ -158,7 +159,7 @@ void comm1naar2(){
   }
   if (chPos > 0) { // Check if there is any received data
     cString[chPos] = '\0'; // Terminate cString
-    // Serial.print(cString);
+    Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
 }
@@ -202,7 +203,6 @@ void activeerStatus(){
     gaNaarCoordinaat(3);
   }
 }
-
 
 //*Functies voor statussen
 void gaNaarCoordinaat(int coordinaatIndex){
@@ -275,8 +275,6 @@ void geefRichting() {
 
   //Serial.println(richting);
 }
-
-
 
 void handmatigBewegen() {
   //Zet de string om in een Int
@@ -378,8 +376,8 @@ void leesMicroSwitches(){
     }
     if (switch1State == LOW && switch2State == LOW) {
      //Serial.println("testmicro");
-     drukSwitchBoven = false;
-     drukSwitchBeneden = false;
+      drukSwitchBoven = false;
+      drukSwitchBeneden = false;
     }
   }
 }
@@ -393,7 +391,7 @@ void leesInductiveSensoren(){
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste keer dat de microswitches zijn gelezen
   if (currentMillis - previousMillis2 >= interval2) {
     previousMillis2 = currentMillis; // Reset de timer
-     
+    
     // Lees de status van de schakelaars
     bool indLinksState = digitalRead(indLinks);
     bool indRechtsState = digitalRead(indRechts);
