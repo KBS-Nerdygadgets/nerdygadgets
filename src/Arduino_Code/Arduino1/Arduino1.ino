@@ -185,14 +185,6 @@ void serialRead() {
   }
 }
 
-void serialWrite(String message) {
-  const char* messageToSend = message.c_str();
-  // Transmit the message
-  if ((millis() - sendmessageMillis) > 200) {
-  sendMessage(messageToSend);
-  sendmessageMillis = millis();
-  }
-}
 // Function to transmit a message over the serial connection
 void sendMessage(const char* message) {
   link.println(message);
