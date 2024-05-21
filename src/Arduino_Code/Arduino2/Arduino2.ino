@@ -1,8 +1,9 @@
 #include <SoftwareSerial.h>
 #define VRY_PIN A2
 
-int pwmA = 3;
-int dirA = 12;
+////////////////////////////
+// *** ORANJE ARDUINO *** //
+////////////////////////////
 
 //Encoder
 const int YencoderPin = 2;
@@ -12,23 +13,63 @@ int Yencoder = 0;
 int yValue = 0;
 int snelheid = 255;
 
-int aantalProducten = 0;
-int tijd = 0;
-int delayOmhoog = 800;
+// *** ALLE PINS *** //
+// Pins ledjes
+const int redLED = 8;
+const int yellowLED = 11;
+const int greenLED1 = 13;
 
-String tweeNaarEen = "00000";
+String tweeNaarEen = "000000";
 
 bool bijCoordinaat = false;
 bool omhoogGegaan = true;
 
-//seriele communicatie
+//Motorpins voor motor z-as
+const int pwmA = 3;
+const int dirA = 12;
+
+// Afstandsensorpin voor z-as
+const int distanceSensorZ = A3;
+
+// Afstandsensorenpins voor magazijn
+const int distanceSensorL = A4;
+const int distanceSensorR = A5;
+
+// Noodstop knoppen
+const int buttonNoodStop = 5;
+const int buttonNoodStopReset = 6;
+const int buttonSetStatus = A1;
+
+// *** VARIABLEN *** ///
+// Modus
+enum Modus {STOP, HANDMATIG, AUTOMATISCH};
+Modus huidigeModus = HANDMATIG;
+
+//variabel voor afstandsensor
+bool voorSafe = false;
+bool achterSafe = false;
+
+// Variable voor uitgeschovend detectie
+bool uitgeschoven = false;
+
+// NOODSTOP
+bool noodStop = false;
+bool handmatig = true;
+bool automatisch = false;
+
+int aantalProducten = 0;
+int tijd = 0;
+int delayOmhoog = 800;
+
+// *** seriele communicatie *** //
 SoftwareSerial link(7, 10);  // Rx, Tx
+byte greenLED = 12;
 char cString[20];
 byte chPos = 0;
 unsigned long sendmessageMillis = 0;
 
 String firstThreeChars;
-//seriele communicatie end
+// *** seriele communicatie end *** //
 
 void setup() {
   // put your setup code here, to run once:
@@ -45,8 +86,27 @@ void setup() {
   Serial.begin(9600);
   Serial.println(yValue);
 
+  //pinMode afstandsensoren
+  pinMode(distanceSensorZ, INPUT);
+  pinMode(distanceSensorL, INPUT);
+  pinMode(distanceSensorR, INPUT);
+
+  // Button noodstopreset
+  pinMode(buttonNoodStopReset, INPUT_PULLUP);
+  pinMode(buttonNoodStop, INPUT_PULLUP);
+
+  // Ledjes
+  pinMode(redLED, OUTPUT);
+  pinMode(yellowLED, OUTPUT);
+  pinMode(greenLED1, OUTPUT);
+
+  updateLEDs();
+  
+  Serial.begin(9600);
+
   //seriele communicatie
   link.begin(9600);
+  pinMode(greenLED, OUTPUT);
   //seriele communicatie end
 }
 
@@ -71,32 +131,32 @@ void loop() {
   functiesStatussen();
 }
 
-//seriele communicatie
 void sendMessage(const char* message) {
   link.println(message);
-  //Serial.println(message); // Print to local screen for debugging
 }
-//seriele communicatie end
 
 void leesJoystick() {
   yValue = analogRead(VRY_PIN);
 }
 
 void handmatigBewegen() {
-  leesJoystick();
-  //Achteruit
-  if (yValue > 700) {
-    analogWrite(pwmA, 127);
-    digitalWrite(dirA, HIGH);
-  }
-  //Vooruit
-  else if (yValue < 300) {
-    analogWrite(pwmA, 127);
-    digitalWrite(dirA, LOW);
-  }
+  if(noodStop == false){
+    leesJoystick();
+    // Achteruit
+    if (yValue > 700 && achterSafe == false ) {
+      analogWrite(pwmA, 127);
+      digitalWrite(dirA, HIGH);
+    }
+    // Vooruit
+    else if (yValue < 300 && voorSafe == false) {
+      analogWrite(pwmA, 127);
+      digitalWrite(dirA, LOW);
+    }
 
-  else {
-    analogWrite(pwmA, LOW);
+    // Stop
+    else {
+      analogWrite(pwmA, LOW);
+    }
   }
 }
 
@@ -118,13 +178,11 @@ void pakProduct() {
   delay(tijd);
 
   omhoogGegaan = false;
-  tweeNaarEen.setCharAt(0, "1");
+  tweeNaarEen.setCharAt(0, 49); //Set 1
 
   while (omhoogGegaan == false) {
     analogWrite(pwmA, 0);
-
   }
-
   analogWrite(pwmA, snelheid);
   digitalWrite(dirA, HIGH);
   delay(tijd);
@@ -135,6 +193,7 @@ void pakProduct() {
   aantalProducten++;
 }
 
+//*Communicatie
 void serialWrite(String message) {
   // Specify the message to send
   const char* messageToSend = message.c_str(); //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
@@ -277,7 +336,7 @@ void updateLEDs() {
   // Turn off all LEDs
   digitalWrite(redLED, LOW);
   digitalWrite(yellowLED, LOW);
-  digitalWrite(greenLED1, LOW);
+  digitalWrite(greenLED, LOW);
 
   // LAMPJES SWITCHEN
   switch (huidigeModus) {
