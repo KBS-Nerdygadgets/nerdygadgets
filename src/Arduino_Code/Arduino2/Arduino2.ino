@@ -183,7 +183,7 @@ void pakProduct() {
   delay(tijd);
 
   omhoogGegaan = false;
-  tweeNaarEen.setCharAt(0, "1");
+  tweeNaarEen.setCharAt(0, 49);
 
   while (omhoogGegaan == false) {
     analogWrite(pwmA, 0);
