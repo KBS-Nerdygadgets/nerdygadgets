@@ -9,7 +9,7 @@ public class Database {
         String password = "";
 
         // SQL query
-        String query = "SELECT * FROM orderlines";
+        String query = "SELECT * FROM warehouse";
 
         try {
             // Establish connection
@@ -25,11 +25,12 @@ public class Database {
             while (resultSet.next()) {
                 // Retrieve data from the result set
                 int id = resultSet.getInt("OrderID");
-                String description = resultSet.getString("Description");
+                int X = resultSet.getInt("X");
+                int Y = resultSet.getInt("Y");
                 // Retrieve other columns as needed
 
                 // Process data
-                System.out.println("ID: " + id + ", Description: " + description);
+                System.out.println("ID: " + id + ", X-as: " + X + ", Y-as: " + Y);
             }
 
             // Exit resources
