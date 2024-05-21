@@ -52,6 +52,8 @@ Modus huidigeModus = HANDMATIG;
 int status = 1;
 String richting = "";
 
+String eenNaarTwee = "000";
+
 //753 pulsen per coordinaat
 const int coordinaten[25][2] = {
   {155, 125},   //5:1
@@ -143,7 +145,7 @@ void loop() {
   }
   serialRead();
   // Serial.println(Yencoder);
-  comm1naar2();
+  serialWrite(eenNaarTwee);
 }
 
 void leesYencoder() {
@@ -157,8 +159,8 @@ void leesYencoder() {
 
 //*Functies voor communicatie tussen Arduinos
 // Specify the message to send
-void comm1naar2(){
-  const char* messageToSend = "1to2";
+void serialWrite(String message){
+  const char* messageToSend = message.c_str();
   // Transmit the message
   if ((millis() - sendmessageMillis) > 200) {
   sendMessage(messageToSend);
