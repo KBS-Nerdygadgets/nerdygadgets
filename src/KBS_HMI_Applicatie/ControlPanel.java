@@ -101,6 +101,14 @@ public class ControlPanel extends JPanel{
                 tempLabel.setBorder(gridBorder);
                 //Deze labels worden allemaal in het grid geplaatst
                 topPanelGrid.add(tempLabel);
+
+                Point point = new Point();
+                if (x == point.x && y == point.y){
+                    int text = 1;
+                    tempLabel.setText(text+"");
+                    tempLabel.setForeground(Color.GREEN);
+                    text++;
+                }
             }
         }
 
