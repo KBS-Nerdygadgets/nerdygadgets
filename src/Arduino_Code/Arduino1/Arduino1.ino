@@ -53,35 +53,35 @@ String eenNaarTwee = "000";
 
 //Encoder waardes van de coordinaten
 const int coordinaten[25][2] = {
-  {155, 125},   //5:1
-  {911, 125},   //5:2
-  {1664, 125},  //5:3
-  {2417, 125},  //5:4
-  {3170, 125},  //5:5
+  {135, 150},   //5:1
+  {888, 150},   //5:2
+  {1640, 150},  //5:3
+  {2392, 150},  //5:4
+  {3145, 150},  //5:5
 
-  {155, 542},   //4:1
-  {911, 542},   //4:2
-  {1664, 542},  //4:3
-  {2417, 542},  //4:4
-  {3170, 542},  //4:5
+  {135, 671},   //4:1
+  {888, 671},   //4:2
+  {1640, 671},  //4:3
+  {2392, 671},  //4:4
+  {3145, 671},  //4:5
 
-  {155, 960},   //3:1
-  {911, 960},   //3:2
-  {1664, 960},  //3:3
-  {2417, 960},  //3:4
-  {3170, 960},  //3:5
+  {135, 1192},   //3:1
+  {888, 1192},   //3:2
+  {1640, 1192},  //3:3
+  {2392, 1192},  //3:4
+  {3145, 1192},  //3:5
 
-  {155, 1377},   //2:1
-  {911, 1377},   //2:2
-  {1664, 1377},  //2:3
-  {2417, 1377},  //2:4
-  {3170, 1377},  //2:5
+  {135, 1713},   //2:1
+  {888, 1713},   //2:2
+  {1640, 1713},  //2:3
+  {2392, 1713},  //2:4
+  {3145, 1713},  //2:5
 
-  {155, 1796},   //1:1
-  {911, 1796},   //1:2
-  {1664, 1796},  //1:3
-  {2417, 1796},  //1:4
-  {3170, 1796}   //1:5
+  {135, 2234},   //1:1
+  {888, 2234},   //1:2
+  {1640, 2234},  //1:3
+  {2392, 2234},  //1:4
+  {3145, 2234}   //1:5
 };
 
 //Uiteinde sensoren variablen
@@ -157,11 +157,13 @@ void serialRead() {
     char c = Wire.read();
     input += c;
   }
+  // delay(5);
   // Serial.println(input);
 }
 
 void serialWrite(){
   Wire.write(eenNaarTwee.c_str());
+  // delay(5);
 }
 
 //Zet bericht om in variabelen
@@ -191,13 +193,11 @@ void gaNaarCoordinaat(int coordinaatIndex){
   //*Xas
   //beweeg naar links als coordinaat zich links bevind
   if(Xencoder > (coordinaten[coordinaatIndex][0]+10)){
-    XasAangekomen = false;
     analogWrite(pwmA, snelheid);
     digitalWrite(dirA, LOW);
   }
   //beweeg naar rechts als coordinaat zich rechts bevind
   else if(Xencoder < (coordinaten[coordinaatIndex][0]-10)){
-    XasAangekomen = false;
     analogWrite(pwmA, snelheid);
     digitalWrite(dirA, HIGH);
   }
@@ -210,13 +210,11 @@ void gaNaarCoordinaat(int coordinaatIndex){
   //*Yas
   //beweeg naar beneden als coordinaat zich beneden bevind
   if(Yencoder > coordinaten[coordinaatIndex][1]){
-    YasAangekomen = false;
     analogWrite(pwmB, snelheid);
     digitalWrite(dirB, HIGH);
   }
   //beweeg naar boven als coordinaat zich boven bevind
   else if(Yencoder < coordinaten[coordinaatIndex][1]){
-    YasAangekomen = false;
     analogWrite(pwmB, snelheid);
     digitalWrite(dirB, LOW);
   }

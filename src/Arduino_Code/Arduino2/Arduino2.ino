@@ -132,11 +132,14 @@ void serialRead() {
     input += c;
   }
   Serial.println(input);
+  leesString();
+  // delay(5);
 }
 
 void serialWrite(){
   encoderInString();
   Wire.write(tweeNaarEen.c_str());
+  // delay(5);
 }
 
 void leesString() {
@@ -295,16 +298,7 @@ void updateLEDs() {
 }
 
 void noodstopReset() {
-  // float afstandLinks = analogRead(distanceSensorL); //Value van de sensor in var zetten
   bool noodStopReset = digitalRead(buttonNoodStopReset);
-  
-  // if(noodStopReset == LOW && afstandLinks > 250){
-  //   if(noodStop == true){
-  //     noodStop = false;
-  //     huidigeModus = HANDMATIG; updateLEDs(); // Ledjes veranderen en updaten
-  //     // Ga naar begin punt functie hier
-  //   }
-  // }
 
   if(noodStopReset == LOW){
     if(noodStop == true){
