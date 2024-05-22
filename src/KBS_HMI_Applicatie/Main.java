@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        new GUIManager(new Dimension(1000, 700));
+        new GUIManager(new Dimension(1000, 800));
 
         //Maak lijst met poorten
         SerialPort[] ports = SerialPort.getCommPorts();
