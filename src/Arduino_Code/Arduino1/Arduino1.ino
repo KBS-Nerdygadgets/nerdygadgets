@@ -36,8 +36,8 @@ int yValue = 0; // Joystick Yas
 bool YasAangekomen = false; //Automatische mode
 
 //Pins van de microswitches, ms = microswitch
-const int msBeneden = A5;
-const int msBoven = A4;
+const int msBeneden = 10;
+const int msBoven = 7;
 
 //Pins van de inductive (metaal)sensoren, ind = inductive
 const int indLinks = 6;
@@ -49,6 +49,7 @@ Modus huidigeModus = HANDMATIG;
 
 int status = 1;
 String richting = "";
+String input = "";
 
 String eenNaarTwee = "000";
 
@@ -126,7 +127,6 @@ void setup() {
 //*Loop
 void loop() {
   functiesSensoren();
-
   switch(huidigeModus){
     case HANDMATIG:
       // Serial.println("Handmatig");
@@ -169,21 +169,19 @@ void serialRead() {
 
 //Zet bericht om in variabelen
 void leesString() {
-  //belangrijk stukje
-  String input = cString;
+  input = cString;
   Serial.println(input);
   Yencoder = input.substring(1, 5).toInt();
   status = input.substring(5).toInt();
   setStatus();
   delay(20);
-  //belangrijk stukje einde
 }
 
 // Set het bericht dat je wil versturen
 void serialWrite(String message){
   const char* messageToSend = message.c_str();
   // Transmit the message
-  if ((millis() - sendmessageMillis) > 100) {
+  if ((millis() - sendmessageMillis) > 150) {
   sendMessage(messageToSend);
   sendmessageMillis = millis();
   }

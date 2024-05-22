@@ -33,13 +33,11 @@ const int dirA = 12;
 const int distanceSensorZ = A3;
 
 // Afstandsensorenpins voor magazijn
-const int distanceSensorL = A4;
-const int distanceSensorR = A5;
+const int distanceSensorL = A2;
 
 // Noodstop knoppen
 const int buttonNoodStop = 5;
 const int buttonNoodStopReset = 6;
-const int buttonSetStatus = A1;
 
 // *** VARIABLEN *** ///
 // Modus
@@ -132,10 +130,6 @@ void loop() {
   functiesStatussen();
 }
 
-void sendMessage(const char* message) {
-  link.println(message);
-}
-
 void leesJoystick() {
   yValue = analogRead(VRY_PIN);
 }
@@ -199,10 +193,14 @@ void serialWrite(String message) {
   // Specify the message to send
   const char* messageToSend = message.c_str(); //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
   // Transmit the message
-  if ((millis() - sendmessageMillis) > 100) {
+  if ((millis() - sendmessageMillis) > 150) {
     sendMessage(messageToSend);
     sendmessageMillis = millis();
   }
+}
+
+void sendMessage(const char* message) {
+  link.println(message);
 }
 
 void serialRead() {
@@ -320,12 +318,11 @@ void leesDistanceSchap(){
     previousMillis2 = currentMillis; // Reset de timer
 
     float afstandLinks = analogRead(distanceSensorL); //Value van de sensor in var zetten
-    float afstandRechts = analogRead(distanceSensorR); //Value van de sensor in var zetten
   
     // Print de afstand naar de seriële monitor
      //Serial.print("Afstand links: "); Serial.print(afstandLinks); Serial.print(" & rechts: "); Serial.println(afstandRechts);
 
-    if(afstandLinks < 250 || afstandRechts < 250){
+    if(afstandLinks < 250){
       Serial.println("NOODSTOP");
       analogWrite(pwmA, 0);
       noodStop = true;
