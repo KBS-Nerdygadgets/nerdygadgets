@@ -1,10 +1,12 @@
-#include <SoftwareSerial.h>
+#include <Wire.h>
+
 #define VRY_PIN A2
 
 ////////////////////////////
-// *** ORANJE ARDUINO *** //
+// *** ORANJE ARDUINO MASTER*** //
 ////////////////////////////
 
+// *** ALLE PINS *** //
 //Encoder
 const int YencoderPin = 2;
 const int YrichtingPin = 4;
@@ -17,13 +19,10 @@ bool resettenYencoder = 0;
 int yValue = 0;
 int snelheid = 255;
 
-// *** ALLE PINS *** //
 // Pins ledjes
 const int redLED = 8;
 const int yellowLED = 11;
-const int greenLED1 = 13;
-
-String tweeNaarEen = "000000";
+const int greenLED = 13;
 
 //Motorpins voor motor z-as
 const int pwmA = 3;
@@ -33,13 +32,11 @@ const int dirA = 12;
 const int distanceSensorZ = A3;
 
 // Afstandsensorenpins voor magazijn
-const int distanceSensorL = A4;
-const int distanceSensorR = A5;
+const int distanceSensorL = A0;
 
 // Noodstop knoppen
 const int buttonNoodStop = 5;
 const int buttonNoodStopReset = 6;
-const int buttonSetStatus = A1;
 
 // *** VARIABLEN *** ///
 // Modus
@@ -63,14 +60,14 @@ int tijd = 0;
 int delayOmhoog = 800;
 bool omhoogGegaan = false;
 
+String tweeNaarEen = "000000";
+String input = "";
+
 // *** seriele communicatie *** //
-SoftwareSerial link(7, 10);  // Rx, Tx
-byte greenLED = 12;
-char cString[20];
-byte chPos = 0;
 unsigned long sendmessageMillis = 0;
 
-String firstThreeChars;
+const int slaveAddress1 = 8;
+const int slaveAddress2 = 9;
 // *** seriele communicatie end *** //
 
 void setup() {
@@ -85,12 +82,11 @@ void setup() {
   pinMode(YencoderPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(YencoderPin), leesEncoder, RISING);
 
-  Serial.begin(9600);
+  
 
   //pinMode afstandsensoren
   pinMode(distanceSensorZ, INPUT);
   pinMode(distanceSensorL, INPUT);
-  pinMode(distanceSensorR, INPUT);
 
   // Button noodstopreset
   pinMode(buttonNoodStopReset, INPUT_PULLUP);
@@ -99,16 +95,14 @@ void setup() {
   // Ledjes
   pinMode(redLED, OUTPUT);
   pinMode(yellowLED, OUTPUT);
-  pinMode(greenLED1, OUTPUT);
+  pinMode(greenLED, OUTPUT);
 
   updateLEDs();
-  
-  Serial.begin(9600);
 
-  //seriele communicatie
-  link.begin(9600);
-  pinMode(greenLED, OUTPUT);
-  //seriele communicatie end
+  Wire.begin(slaveAddress2);
+  Wire.onReceive(serialRead);
+  Wire.onRequest(serialWrite);
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -124,104 +118,29 @@ void loop() {
       //functies automatisch
       break;
   }
-
-  encoderInString();
   // Serial.println(Yencoder);
-  serialWrite(tweeNaarEen);
   serialRead();
   functiesStatussen();
 }
 
-void sendMessage(const char* message) {
-  link.println(message);
-}
-
-void leesJoystick() {
-  yValue = analogRead(VRY_PIN);
-}
-
-void handmatigBewegen() {
-  if(noodStop == false){
-    leesJoystick();
-    // Achteruit
-    if (yValue > 700 && achterSafe == false ) {
-      analogWrite(pwmA, 127);
-      digitalWrite(dirA, HIGH);
-    }
-    // Vooruit
-    else if (yValue < 300 && voorSafe == false) {
-      analogWrite(pwmA, 127);
-      digitalWrite(dirA, LOW);
-    }
-
-    // Stop
-    else {
-      analogWrite(pwmA, LOW);
-    }
-  }
-}
-
-void pakProduct() {
-  if (aantalProducten == 0) {
-    tijd = 1100;
-  }
-
-  else if (aantalProducten == 1) {
-    tijd = 1000;
-  }
-
-  else if (aantalProducten == 2) {
-    tijd = 500;
-  }
-
-  digitalWrite(dirA, LOW);
-  analogWrite(pwmA, snelheid);
-  delay(tijd);
-
-  omhoogGegaan = false;
-  tweeNaarEen.setCharAt(0, 49); //Set 1
-
-  while (omhoogGegaan == false) {
-    analogWrite(pwmA, 0);
-  }
-  analogWrite(pwmA, snelheid);
-  digitalWrite(dirA, HIGH);
-  delay(tijd);
-
-  analogWrite(pwmA, 0);
-
-  bijCoordinaatAangekomen = false;
-  aantalProducten++;
-}
-
-//*Communicatie
-void serialWrite(String message) {
-  // Specify the message to send
-  const char* messageToSend = message.c_str(); //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
-  // Transmit the message
-  if ((millis() - sendmessageMillis) > 100) {
-    sendMessage(messageToSend);
-    sendmessageMillis = millis();
-  }
-}
-
+//*Functies voor de communicatie tussen Arduinos
 void serialRead() {
-  while (link.available()) {
-    char ch = link.read();
-    if (chPos < sizeof(cString) - 1) {  // Avoid buffer overflow
-      cString[chPos++] = ch;
-    }
+  input = "";
+  Wire.requestFrom(slaveAddress1, 3);
+  while (Wire.available()) {
+    char c = Wire.read();
+    input += c;
   }
-  if (chPos > 0) {          // Check if there is any received data
-    cString[chPos] = '\0';  // Terminate cString
-    Serial.print(cString);
-    chPos = 0;  // Reset position for the next message
-  }
+  Serial.println(input);
+}
+
+void serialWrite(){
+  encoderInString();
+  Wire.write(tweeNaarEen.c_str());
 }
 
 void leesString() {
   //belangrijk stukje
-  String input = cString;
   Serial.println(input);
   yasOmhoog = input.substring(0).toInt();
   bijCoordinaatAangekomen = input.substring(1).toInt();
@@ -320,12 +239,13 @@ void leesDistanceSchap(){
     previousMillis2 = currentMillis; // Reset de timer
 
     float afstandLinks = analogRead(distanceSensorL); //Value van de sensor in var zetten
-    float afstandRechts = analogRead(distanceSensorR); //Value van de sensor in var zetten
   
     // Print de afstand naar de seriële monitor
-     //Serial.print("Afstand links: "); Serial.print(afstandLinks); Serial.print(" & rechts: "); Serial.println(afstandRechts);
+    Serial.print("Afstand links: "); Serial.print(afstandLinks);
+    Serial.println();
+    // Serial.print(" & rechts: "); Serial.println(afstandRechts);
 
-    if(afstandLinks < 250 || afstandRechts < 250){
+    if(afstandLinks < 250){
       Serial.println("NOODSTOP");
       analogWrite(pwmA, 0);
       noodStop = true;
@@ -336,7 +256,7 @@ void leesDistanceSchap(){
 
 void functiesSensoren(){
   leesDistanceSensorZ();
-  leesDistanceSchap();
+  // leesDistanceSchap();
 }
 
 //*Statussen
@@ -352,20 +272,20 @@ void updateLEDs() {
     case STOP:
       digitalWrite(redLED, HIGH);
       digitalWrite(yellowLED, LOW);
-      digitalWrite(greenLED1, LOW);
+      digitalWrite(greenLED, LOW);
       noodStop = true;
       automatisch = false;
       handmatig = false;
       break;
     case HANDMATIG:
       digitalWrite(yellowLED, HIGH);
-      digitalWrite(greenLED1, LOW);
+      digitalWrite(greenLED, LOW);
       handmatig = true;
       noodStop = false;
       automatisch = false;
       break;
     case AUTOMATISCH:
-      digitalWrite(greenLED1, HIGH);
+      digitalWrite(greenLED, HIGH);
       digitalWrite(yellowLED, LOW);
       automatisch = true;
       handmatig = false;
@@ -375,11 +295,18 @@ void updateLEDs() {
 }
 
 void noodstopReset() {
-  float afstandLinks = analogRead(distanceSensorL); //Value van de sensor in var zetten
-  float afstandRechts = analogRead(distanceSensorR); //Value van de sensor in var zetten
+  // float afstandLinks = analogRead(distanceSensorL); //Value van de sensor in var zetten
   bool noodStopReset = digitalRead(buttonNoodStopReset);
   
-  if(noodStopReset == LOW && afstandLinks > 250 && afstandRechts > 250){
+  // if(noodStopReset == LOW && afstandLinks > 250){
+  //   if(noodStop == true){
+  //     noodStop = false;
+  //     huidigeModus = HANDMATIG; updateLEDs(); // Ledjes veranderen en updaten
+  //     // Ga naar begin punt functie hier
+  //   }
+  // }
+
+  if(noodStopReset == LOW){
     if(noodStop == true){
       noodStop = false;
       huidigeModus = HANDMATIG; updateLEDs(); // Ledjes veranderen en updaten
@@ -438,4 +365,62 @@ void functiesStatussen(){
   noodstopReset();
   setStatus();
   stuurStatus();
+}
+
+void leesJoystick() {
+  yValue = analogRead(VRY_PIN);
+}
+
+void handmatigBewegen() {
+  if(noodStop == false){
+    leesJoystick();
+    // Achteruit
+    if (yValue > 700 && achterSafe == false ) {
+      analogWrite(pwmA, 127);
+      digitalWrite(dirA, HIGH);
+    }
+    // Vooruit
+    else if (yValue < 300 && voorSafe == false) {
+      analogWrite(pwmA, 127);
+      digitalWrite(dirA, LOW);
+    }
+
+    // Stop
+    else {
+      analogWrite(pwmA, LOW);
+    }
+  }
+}
+
+void pakProduct() {
+  if (aantalProducten == 0) {
+    tijd = 1100;
+  }
+
+  else if (aantalProducten == 1) {
+    tijd = 1000;
+  }
+
+  else if (aantalProducten == 2) {
+    tijd = 500;
+  }
+
+  digitalWrite(dirA, LOW);
+  analogWrite(pwmA, snelheid);
+  delay(tijd);
+
+  omhoogGegaan = false;
+  tweeNaarEen.setCharAt(0, 49); //Set 1
+
+  while (omhoogGegaan == false) {
+    analogWrite(pwmA, 0);
+  }
+  analogWrite(pwmA, snelheid);
+  digitalWrite(dirA, HIGH);
+  delay(tijd);
+
+  analogWrite(pwmA, 0);
+
+  bijCoordinaatAangekomen = false;
+  aantalProducten++;
 }

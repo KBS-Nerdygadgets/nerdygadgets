@@ -1,18 +1,16 @@
-#include <SoftwareSerial.h>
+#include <Wire.h>
 
 #define VRX_PIN  A2 // Arduino pin connected to VRX pin
 #define VRY_PIN  A3 // Arduino pin connected to VRY pin
 
 ////////////////////////////
-// *** GROENE ARDUINO *** //
+// *** GROENE ARDUINO SLAVE*** //
 ////////////////////////////
 
 //seriele communicatie
-SoftwareSerial link(7, 10); // Rx, Tx
-byte greenLED = 12;
-char cString[20];
-byte chPos = 0;
 unsigned long sendmessageMillis = 0;
+const int slaveAddress1 = 8;
+const int slaveAddress2 = 9;
 
 //Snelheid van de Motoren
 const int snelheid = 255;
@@ -36,8 +34,8 @@ int yValue = 0; // Joystick Yas
 bool YasAangekomen = false; //Automatische mode
 
 //Pins van de microswitches, ms = microswitch
-const int msBeneden = A5;
-const int msBoven = A4;
+const int msBeneden = 10;
+const int msBoven = 7;
 
 //Pins van de inductive (metaal)sensoren, ind = inductive
 const int indLinks = 6;
@@ -49,6 +47,7 @@ Modus huidigeModus = HANDMATIG;
 
 int status = 1;
 String richting = "";
+String input = "";
 
 String eenNaarTwee = "000";
 
@@ -117,16 +116,15 @@ void setup() {
   //Interrupt voor encoder
   attachInterrupt(digitalPinToInterrupt(XencoderPin), XleesEncoder, RISING);
 
+  Wire.begin(slaveAddress1);
+  Wire.onReceive(serialRead);
+  Wire.onRequest(serialWrite);
   Serial.begin(9600);
-
-  //seriele communicatie setup
-  link.begin(9600);
 }
 
 //*Loop
 void loop() {
   functiesSensoren();
-
   switch(huidigeModus){
     case HANDMATIG:
       // Serial.println("Handmatig");
@@ -145,54 +143,32 @@ void loop() {
   }
   serialRead();
   leesString();
-  setStatus();
-  serialWrite(eenNaarTwee);
+  // Serial.print(Xencoder);
+  // Serial.print("              ");
   // Serial.println(Yencoder);
-  // Serial.println(Xencoder);
 }
 
 //*Functies voor communicatie tussen Arduinos
 //Vang bericht van Arduino 2
 void serialRead() {
-  while (link.available()) {
-    char ch = link.read();
+  input = "";
+  Wire.requestFrom(slaveAddress2, 6);
+  while (Wire.available()) {
+    char c = Wire.read();
+    input += c;
+  }
+  Serial.println(input);
+}
 
-    if (chPos < sizeof(cString) - 1) { // Avoid buffer overflow
-      cString[chPos++] = ch;
-    }
-  }
-  if (chPos > 0) { // Check if there is any received data
-    cString[chPos] = '\0'; // Terminate cString
-    chPos = 0; // Reset position for the next message
-  }
+void serialWrite(){
+  Wire.write(eenNaarTwee.c_str());
 }
 
 //Zet bericht om in variabelen
 void leesString() {
-  //belangrijk stukje
-  String input = cString;
-  Serial.println(input);
   Yencoder = input.substring(1, 5).toInt();
   status = input.substring(5).toInt();
   setStatus();
-  delay(20);
-  //belangrijk stukje einde
-}
-
-// Set het bericht dat je wil versturen
-void serialWrite(String message){
-  const char* messageToSend = message.c_str();
-  // Transmit the message
-  if ((millis() - sendmessageMillis) > 100) {
-  sendMessage(messageToSend);
-  sendmessageMillis = millis();
-  }
-}
-
-//Stuur bericht naar Arduino 2
-void sendMessage(const char* message) {
-  link.println(message);
-  //Serial.println(message); // Print to local screen for debugging
 }
 
 //*Functies voor statussen
@@ -226,10 +202,10 @@ void gaNaarCoordinaat(int coordinaatIndex){
     digitalWrite(dirA, HIGH);
   }
   //stop
-  // else{
-  //   analogWrite(pwmA, 0);
-  //   XasAangekomen = true;
-  // }
+  else{
+    analogWrite(pwmA, 0);
+    XasAangekomen = true;
+  }
 
   //*Yas
   //beweeg naar beneden als coordinaat zich boven bevind
