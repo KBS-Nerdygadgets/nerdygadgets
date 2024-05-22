@@ -143,9 +143,9 @@ void loop() {
   }
   serialRead();
   leesString();
-  // Serial.print(Xencoder);
-  // Serial.print("              ");
-  // Serial.println(Yencoder);
+  Serial.print(Xencoder);
+  Serial.print("              ");
+  Serial.println(Yencoder);
 }
 
 //*Functies voor communicatie tussen Arduinos
@@ -157,7 +157,7 @@ void serialRead() {
     char c = Wire.read();
     input += c;
   }
-  Serial.println(input);
+  // Serial.println(input);
 }
 
 void serialWrite(){
@@ -190,13 +190,13 @@ void setStatus() {
 void gaNaarCoordinaat(int coordinaatIndex){
   //*Xas
   //beweeg naar links als coordinaat zich links bevind
-  if(Xencoder > coordinaten[coordinaatIndex][0]){
+  if(Xencoder > (coordinaten[coordinaatIndex][0]+10)){
     XasAangekomen = false;
     analogWrite(pwmA, snelheid);
     digitalWrite(dirA, LOW);
   }
   //beweeg naar rechts als coordinaat zich rechts bevind
-  else if(Xencoder < coordinaten[coordinaatIndex][0]){
+  else if(Xencoder < (coordinaten[coordinaatIndex][0]-10)){
     XasAangekomen = false;
     analogWrite(pwmA, snelheid);
     digitalWrite(dirA, HIGH);
@@ -208,21 +208,22 @@ void gaNaarCoordinaat(int coordinaatIndex){
   }
 
   //*Yas
-  //beweeg naar beneden als coordinaat zich boven bevind
+  //beweeg naar beneden als coordinaat zich beneden bevind
   if(Yencoder > coordinaten[coordinaatIndex][1]){
     YasAangekomen = false;
     analogWrite(pwmB, snelheid);
-    digitalWrite(dirA, LOW);
+    digitalWrite(dirB, HIGH);
   }
   //beweeg naar boven als coordinaat zich boven bevind
   else if(Yencoder < coordinaten[coordinaatIndex][1]){
     YasAangekomen = false;
     analogWrite(pwmB, snelheid);
-    digitalWrite(dirA, HIGH);
+    digitalWrite(dirB, LOW);
   }
   //stop
   else{
     analogWrite(pwmB, 0);
+    //rem y
     YasAangekomen = true;
   }
 
