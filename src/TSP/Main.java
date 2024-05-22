@@ -5,6 +5,11 @@ import java.util.List;
 import Database.Database;
 
 public class Main {
+    public static List<Point> fetchPoints() {
+        // Fetch points from the database
+        List<Point> points = Database.fetchPointsFromDatabase();
+        return points;
+    }
     public static void main(String[] args) {
         // Fetch points from the database
         List<Point> points = Database.fetchPointsFromDatabase();

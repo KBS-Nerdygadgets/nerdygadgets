@@ -4,14 +4,20 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.List;
+import TSP.Main;
+import TSP.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class OrderPanel extends JPanel{
     private GUIThemes guiTheme;
     private Dimension screenDimension;
     private JPanel ordersPanel, buttonsPanel, managebuttonPanel, startbuttonPanel;
-    private JButton manageOrderButton, startOrderButton;
+    private JComboBox<String> selectOrderBox;
+    private JButton startOrderButton;//, selectOrderBox;
     private JLabel orderLabel, orders;
-    
+
     public OrderPanel(Dimension screenDimension){
         this.screenDimension = screenDimension;
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast
@@ -68,18 +74,36 @@ public class OrderPanel extends JPanel{
         startbuttonPanel.setPreferredSize(buttonPanelDimensions);
 
         //De knop die in het manage paneel geplaatst zal worden
-        manageOrderButton = new JButton("Manage order");
-        manageOrderButton.setBackground(buttonColor);
-        manageOrderButton.setForeground(foregroundColor);
-        manageOrderButton.setPreferredSize(buttonDimensions);
-        manageOrderButton.setFont(new Font(manageOrderButton.getFont().getName(), Font.PLAIN, 20));
-
-        //De knop die in het start paneel geplaatst zal worden
-        startOrderButton = new JButton("Start order");
+        startOrderButton = new JButton("Start Order");
         startOrderButton.setBackground(buttonColor);
         startOrderButton.setForeground(foregroundColor);
         startOrderButton.setPreferredSize(buttonDimensions);
         startOrderButton.setFont(new Font(startOrderButton.getFont().getName(), Font.PLAIN, 20));
+        startOrderButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Haal de geselecteerde waarde van de JComboBox op
+                String selectedOrder = (String) selectOrderBox.getSelectedItem();
+                // Werk de tekst van orderLabel bij met de geselecteerde waarde
+                orderLabel.setText("Order: " + selectedOrder);
+            }
+        });
+
+        // De combobox die in het start paneel geplaatst zal worden
+        selectOrderBox = new JComboBox<>();
+        selectOrderBox.setBackground(buttonColor);
+        selectOrderBox.setForeground(foregroundColor);
+        selectOrderBox.setPreferredSize(buttonDimensions);
+        selectOrderBox.setFont(new Font(selectOrderBox.getFont().getName(), Font.PLAIN, 20));
+        // Fetch and populate points in the combobox
+        populateComboBox();
+
+        //De knop die in het start paneel geplaatst zal worden
+//        selectOrderBox = new JButton("Start order");
+//        selectOrderBox.setBackground(buttonColor);
+//        selectOrderBox.setForeground(foregroundColor);
+//        selectOrderBox.setPreferredSize(buttonDimensions);
+//        selectOrderBox.setFont(new Font(selectOrderBox.getFont().getName(), Font.PLAIN, 20));
 
         //Alles wordt toegevoegd in de panelen
         add(orders, BorderLayout.NORTH);
@@ -88,9 +112,22 @@ public class OrderPanel extends JPanel{
         ordersPanel.add(buttonsPanel, BorderLayout.CENTER);
 
         buttonsPanel.add(managebuttonPanel, BorderLayout.WEST);
-        managebuttonPanel.add(manageOrderButton);
+        startbuttonPanel.add(startOrderButton);
 
         buttonsPanel.add(startbuttonPanel, BorderLayout.EAST);
-        startbuttonPanel.add(startOrderButton);
+        managebuttonPanel.add(selectOrderBox);
+    }
+
+    private void populateComboBox() {
+        // Fetch points using the TSP.Main class
+        List<Point> points = Main.fetchPoints();
+        // Remove the first point (start point) if needed
+        if (!points.isEmpty()) {
+            points.remove(0);
+        }
+        // Convert points to string and add to combobox
+        for (Point p : points) {
+            selectOrderBox.addItem("(" + p.x + ", " + p.y + ")");
+        }
     }
 }
