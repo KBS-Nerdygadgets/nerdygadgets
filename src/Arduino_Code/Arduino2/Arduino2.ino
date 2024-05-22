@@ -10,6 +10,10 @@ const int YencoderPin = 2;
 const int YrichtingPin = 4;
 int Yencoder = 0;
 
+bool yasOmhoog = 0;
+bool bijCoordinaatAangekomen = 0;
+bool resettenYencoder = 0;
+
 int yValue = 0;
 int snelheid = 255;
 
@@ -20,9 +24,6 @@ const int yellowLED = 11;
 const int greenLED1 = 13;
 
 String tweeNaarEen = "000000";
-
-bool bijCoordinaat = false;
-bool omhoogGegaan = true;
 
 //Motorpins voor motor z-as
 const int pwmA = 3;
@@ -60,6 +61,7 @@ bool automatisch = false;
 int aantalProducten = 0;
 int tijd = 0;
 int delayOmhoog = 800;
+bool omhoogGegaan = false;
 
 // *** seriele communicatie *** //
 SoftwareSerial link(7, 10);  // Rx, Tx
@@ -84,7 +86,6 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(YencoderPin), leesEncoder, RISING);
 
   Serial.begin(9600);
-  Serial.println(yValue);
 
   //pinMode afstandsensoren
   pinMode(distanceSensorZ, INPUT);
@@ -125,7 +126,7 @@ void loop() {
   }
 
   encoderInString();
-  Serial.println(Yencoder);
+  // Serial.println(Yencoder);
   serialWrite(tweeNaarEen);
   serialRead();
   functiesStatussen();
@@ -189,7 +190,7 @@ void pakProduct() {
 
   analogWrite(pwmA, 0);
 
-  bijCoordinaat = false;
+  bijCoordinaatAangekomen = false;
   aantalProducten++;
 }
 
@@ -198,7 +199,7 @@ void serialWrite(String message) {
   // Specify the message to send
   const char* messageToSend = message.c_str(); //dit is de message die je wilt sturen. "3234890" kan met alles vervangen worden, ook variabelen
   // Transmit the message
-  if ((millis() - sendmessageMillis) > 50) {
+  if ((millis() - sendmessageMillis) > 100) {
     sendMessage(messageToSend);
     sendmessageMillis = millis();
   }
@@ -216,12 +217,20 @@ void serialRead() {
     Serial.print(cString);
     chPos = 0;  // Reset position for the next message
   }
-  String input = cString;
-  firstThreeChars = input.substring(0, 3);  //string input van eerste 3 getallen (0, 3)
+}
 
-  if (firstThreeChars.toInt() == 001) { //iets als de eerste 3 karakters over serial 001 zijn. je kunt dit aanpassen zolang het een nummer is
-    //Serial.print("success");  //print voor debugging
+void leesString() {
+  //belangrijk stukje
+  String input = cString;
+  Serial.println(input);
+  yasOmhoog = input.substring(0).toInt();
+  bijCoordinaatAangekomen = input.substring(1).toInt();
+  resettenYencoder = input.substring(2).toInt();
+  if(resettenYencoder == 1){ //reset Yencoder op basis van input van Arduino 1
+    Yencoder = 0;
   }
+  delay(20);
+  //belangrijk stukje einde
 }
 
 void leesEncoder() {
@@ -267,7 +276,6 @@ void encoderInString() {
 //*Sensoren
 unsigned long previousMillis = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
 const unsigned long interval = 200; // Interval van 100 milliseconden
-
 void leesDistanceSensorZ(){
   unsigned long currentMillis = millis(); // Huidige tijd ophalen
 
@@ -278,31 +286,32 @@ void leesDistanceSensorZ(){
     float volts = analogRead(distanceSensorZ);// Value van de sensor in var zetten
   
     // PRINT AFSTAND NAAR SERIELE MONITOR
-    //Serial.print("Afstand vork: "); Serial.println(volts); //distance is tussen 650 en 300
+    // Serial.print("Afstand vork: "); Serial.println(volts); //distance is tussen 650 en 300
     
-    if(volts > 646){
+    if(volts >= 640){
       achterSafe = true;
       uitgeschoven = false;
+      tweeNaarEen.setCharAt(0, 48); //Set 0, stuur naar Arduino 1 dat zas naar binnen staat
       //Serial.println("achter");
     }
     if (volts < 310){
       voorSafe = true;
       //Serial.println("voor");
     }
-    if ( volts > 311 && volts < 645){ // NIet compleet accuraat, bijwerken
+    if ( volts > 311 && volts < 640){ // NIet compleet accuraat, bijwerken
       //Serial.println("tussen 300 en 640");
       voorSafe = false;
       achterSafe = false;
   }
-    if (volts < 645){
+    if (volts < 640){
       uitgeschoven = true;
-  } 
+      tweeNaarEen.setCharAt(0, 49); //Set 1, Stuur naar arduino 1 dat zas naar buiten staat
+    } 
   }
 } 
 
 unsigned long previousMillis2 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
 const unsigned long interval2 = 200; // Interval van 100 milliseconden
-// SCHAP SENSOREN
 void leesDistanceSchap(){
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
 
@@ -402,8 +411,7 @@ void stuurStatus(){
 
 //Gebruikt de bovenste gele knop om tussen handmatige en automatische mode te wisselen
 unsigned long previousMillis3 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
-const unsigned long interval3 = 150; // Interval van 200 milliseconden
-
+const unsigned long interval3 = 400; // Interval van 200 milliseconden
 void setStatus(){
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
