@@ -134,6 +134,8 @@ void loop() {
       break;
     case STOP:
       // Serial.println("Noodstop");
+      analogWrite(pwmA, 0);
+      analogWrite(pwmB, 0);
       //functies noodstop
       break;
     case AUTOMATISCH:
@@ -224,10 +226,10 @@ void gaNaarCoordinaat(int coordinaatIndex){
     digitalWrite(dirA, HIGH);
   }
   //stop
-  else{
-    analogWrite(pwmA, 0);
-    XasAangekomen = true;
-  }
+  // else{
+  //   analogWrite(pwmA, 0);
+  //   XasAangekomen = true;
+  // }
 
   //*Yas
   //beweeg naar beneden als coordinaat zich boven bevind
@@ -405,12 +407,12 @@ void leesMicroSwitches(){
     // Controleer of een van de schakelaars geactiveerd is
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
-      Serial.println("Switch beneden is ingedrukt!");
+      // Serial.println("Switch beneden is ingedrukt!");
       drukSwitchBeneden = true;
       eenNaarTwee.setCharAt(2, 49); //Set getal 1
     }
     if (switch2State == HIGH) {
-      Serial.println("Switch boven is ingedrukt!");
+      // Serial.println("Switch boven is ingedrukt!");
       drukSwitchBoven = true; 
     }
     if (switch1State == LOW && switch2State == LOW) {
@@ -439,12 +441,12 @@ void leesInductiveSensoren(){
     // Controleer of een van de schakelaars geactiveerd is
     // Print naar de seriële monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
-      Serial.println("Nabijheid gedetecteerd aan de linkerkant");
+      // Serial.println("Nabijheid gedetecteerd aan de linkerkant");
       metaalLinks = true;
       Xencoder = 0; //Xas bevind zich bij nulpunt, reset encoder
     }
     if (indRechtsState == LOW) {
-      Serial.println("Nabijheid gedetecteerd aan de rechterkant");
+      // Serial.println("Nabijheid gedetecteerd aan de rechterkant");
       metaalRechts = true;
     } 
     if (indLinksState == HIGH && indRechtsState == HIGH) {

@@ -305,7 +305,7 @@ void leesDistanceSensorZ(){
   }
     if (volts < 640){
       uitgeschoven = true;
-      tweeNaarEen.setCharAt(2, 49); //Set 1, Stuur naar arduino 1 dat zas naar buiten staat
+      tweeNaarEen.setCharAt(0, 49); //Set 1, Stuur naar arduino 1 dat zas naar buiten staat
     } 
   }
 } 
