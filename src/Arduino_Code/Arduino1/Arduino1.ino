@@ -4,11 +4,10 @@
 #define VRY_PIN  A3 // Arduino pin connected to VRY pin
 
 ////////////////////////////
-// *** GROENE ARDUINO SLAVE*** //
+// *** GROENE ARDUINO *** //
 ////////////////////////////
 
 //seriele communicatie
-unsigned long sendmessageMillis = 0;
 const int slaveAddress1 = 8;
 const int slaveAddress2 = 9;
 
@@ -32,11 +31,11 @@ const int brakeB = 8;
 int yValue = 0; // Joystick Yas
 bool YasAangekomen = false; //Automatische mode
 
-//Pins van de microswitches, ms = microswitch
+//Pins van de microswitches
 const int msBeneden = 10;
 const int msBoven = 7;
 
-//Pins van de inductive (metaal)sensoren, ind = inductive
+//Pins van de inductive (metaal)sensoren
 const int indLinks = 6;
 const int indRechts = 5;
 
@@ -160,7 +159,6 @@ void serialRead() {
     char c = Wire.read();
     input += c;
   }
-  // delay(5);
   // Serial.println(input);
 }
 

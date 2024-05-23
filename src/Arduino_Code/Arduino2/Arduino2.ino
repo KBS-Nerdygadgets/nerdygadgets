@@ -3,18 +3,14 @@
 #define VRY_PIN A2
 
 ////////////////////////////
-// *** ORANJE ARDUINO MASTER*** //
+// *** ORANJE ARDUINO *** //
 ////////////////////////////
 
-// *** ALLE PINS *** //
+// *** PINS *** //
 //Encoder
 const int YencoderPin = 2;
 const int YrichtingPin = 4;
 volatile int Yencoder = 0;
-
-bool yasOmhoog = 0;
-bool bijCoordinaatAangekomen = 0;
-bool resettenYencoder = 0;
 
 int yValue = 0;
 int snelheid = 255;
@@ -63,12 +59,13 @@ bool omhoogGegaan = false;
 String tweeNaarEen = "000000";
 String input = "";
 
-// *** seriele communicatie *** //
-unsigned long sendmessageMillis = 0;
-
+//Seriele communicatie
 const int slaveAddress1 = 8;
 const int slaveAddress2 = 9;
-// *** seriele communicatie end *** //
+
+bool yasOmhoog = 0;
+bool bijCoordinaatAangekomen = 0;
+bool resettenYencoder = 0;
 
 void setup() {
   // put your setup code here, to run once:
