@@ -318,22 +318,22 @@ void leesJoystick() {
 void geefRichting() {
   richting = "";
   // Joystick naar rechts
-  if (xValue > 700 && metaalRechts == false) {
+  if (xValue > 700) {
     richting += "1";
   }
 
   // Joystick naar links
-  if (xValue < 300 && metaalLinks == false) {
+  if (xValue < 300) {
     richting += "2";
   }
 
   // Joystick naar boven
-  if (yValue > 700 && drukSwitchBeneden == false) {
+  if (yValue > 700) {
     richting += "3";
   }
 
   // Joystick naar beneden
-  if (yValue < 300 && drukSwitchBoven == false) {
+  if (yValue < 300) {
     richting += "4";
   }
 
