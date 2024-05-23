@@ -1,18 +1,16 @@
-#include <SoftwareSerial.h>
+#include <Wire.h>
 
 #define VRX_PIN  A2 // Arduino pin connected to VRX pin
 #define VRY_PIN  A3 // Arduino pin connected to VRY pin
 
 ////////////////////////////
-// *** GROENE ARDUINO *** //
+// *** GROENE ARDUINO SLAVE*** //
 ////////////////////////////
 
 //seriele communicatie
-SoftwareSerial link(7, 10); // Rx, Tx
-byte greenLED = 12;
-char cString[20];
-byte chPos = 0;
 unsigned long sendmessageMillis = 0;
+const int slaveAddress1 = 8;
+const int slaveAddress2 = 9;
 
 //Snelheid van de Motoren
 const int snelheid = 255;
@@ -55,35 +53,35 @@ String eenNaarTwee = "000";
 
 //Encoder waardes van de coordinaten
 const int coordinaten[25][2] = {
-  {155, 125},   //5:1
-  {911, 125},   //5:2
-  {1664, 125},  //5:3
-  {2417, 125},  //5:4
-  {3170, 125},  //5:5
+  {135, 150},   //5:1
+  {888, 150},   //5:2
+  {1640, 150},  //5:3
+  {2392, 150},  //5:4
+  {3145, 150},  //5:5
 
-  {155, 542},   //4:1
-  {911, 542},   //4:2
-  {1664, 542},  //4:3
-  {2417, 542},  //4:4
-  {3170, 542},  //4:5
+  {135, 671},   //4:1
+  {888, 671},   //4:2
+  {1640, 671},  //4:3
+  {2392, 671},  //4:4
+  {3145, 671},  //4:5
 
-  {155, 960},   //3:1
-  {911, 960},   //3:2
-  {1664, 960},  //3:3
-  {2417, 960},  //3:4
-  {3170, 960},  //3:5
+  {135, 1192},   //3:1
+  {888, 1192},   //3:2
+  {1640, 1192},  //3:3
+  {2392, 1192},  //3:4
+  {3145, 1192},  //3:5
 
-  {155, 1377},   //2:1
-  {911, 1377},   //2:2
-  {1664, 1377},  //2:3
-  {2417, 1377},  //2:4
-  {3170, 1377},  //2:5
+  {135, 1713},   //2:1
+  {888, 1713},   //2:2
+  {1640, 1713},  //2:3
+  {2392, 1713},  //2:4
+  {3145, 1713},  //2:5
 
-  {155, 1796},   //1:1
-  {911, 1796},   //1:2
-  {1664, 1796},  //1:3
-  {2417, 1796},  //1:4
-  {3170, 1796}   //1:5
+  {135, 2234},   //1:1
+  {888, 2234},   //1:2
+  {1640, 2234},  //1:3
+  {2392, 2234},  //1:4
+  {3145, 2234}   //1:5
 };
 
 //Uiteinde sensoren variablen
@@ -118,10 +116,10 @@ void setup() {
   //Interrupt voor encoder
   attachInterrupt(digitalPinToInterrupt(XencoderPin), XleesEncoder, RISING);
 
+  Wire.begin(slaveAddress1);
+  Wire.onReceive(serialRead);
+  Wire.onRequest(serialWrite);
   Serial.begin(9600);
-
-  //seriele communicatie setup
-  link.begin(9600);
 }
 
 //*Loop
@@ -145,52 +143,34 @@ void loop() {
   }
   serialRead();
   leesString();
-  setStatus();
-  serialWrite(eenNaarTwee);
-  // Serial.println(Yencoder);
-  // Serial.println(Xencoder);
+  Serial.print(Xencoder);
+  Serial.print("              ");
+  Serial.println(Yencoder);
 }
 
 //*Functies voor communicatie tussen Arduinos
 //Vang bericht van Arduino 2
 void serialRead() {
-  while (link.available()) {
-    char ch = link.read();
+  input = "";
+  Wire.requestFrom(slaveAddress2, 6);
+  while (Wire.available()) {
+    char c = Wire.read();
+    input += c;
+  }
+  // delay(5);
+  // Serial.println(input);
+}
 
-    if (chPos < sizeof(cString) - 1) { // Avoid buffer overflow
-      cString[chPos++] = ch;
-    }
-  }
-  if (chPos > 0) { // Check if there is any received data
-    cString[chPos] = '\0'; // Terminate cString
-    chPos = 0; // Reset position for the next message
-  }
+void serialWrite(){
+  Wire.write(eenNaarTwee.c_str());
+  // delay(5);
 }
 
 //Zet bericht om in variabelen
 void leesString() {
-  input = cString;
-  Serial.println(input);
   Yencoder = input.substring(1, 5).toInt();
   status = input.substring(5).toInt();
   setStatus();
-  delay(20);
-}
-
-// Set het bericht dat je wil versturen
-void serialWrite(String message){
-  const char* messageToSend = message.c_str();
-  // Transmit the message
-  if ((millis() - sendmessageMillis) > 150) {
-  sendMessage(messageToSend);
-  sendmessageMillis = millis();
-  }
-}
-
-//Stuur bericht naar Arduino 2
-void sendMessage(const char* message) {
-  link.println(message);
-  //Serial.println(message); // Print to local screen for debugging
 }
 
 //*Functies voor statussen
@@ -212,39 +192,36 @@ void setStatus() {
 void gaNaarCoordinaat(int coordinaatIndex){
   //*Xas
   //beweeg naar links als coordinaat zich links bevind
-  if(Xencoder > coordinaten[coordinaatIndex][0]){
-    XasAangekomen = false;
+  if(Xencoder > (coordinaten[coordinaatIndex][0]+10)){
     analogWrite(pwmA, snelheid);
     digitalWrite(dirA, LOW);
   }
   //beweeg naar rechts als coordinaat zich rechts bevind
-  else if(Xencoder < coordinaten[coordinaatIndex][0]){
-    XasAangekomen = false;
+  else if(Xencoder < (coordinaten[coordinaatIndex][0]-10)){
     analogWrite(pwmA, snelheid);
     digitalWrite(dirA, HIGH);
   }
   //stop
-  // else{
-  //   analogWrite(pwmA, 0);
-  //   XasAangekomen = true;
-  // }
+  else{
+    analogWrite(pwmA, 0);
+    XasAangekomen = true;
+  }
 
   //*Yas
-  //beweeg naar beneden als coordinaat zich boven bevind
+  //beweeg naar beneden als coordinaat zich beneden bevind
   if(Yencoder > coordinaten[coordinaatIndex][1]){
-    YasAangekomen = false;
     analogWrite(pwmB, snelheid);
-    digitalWrite(dirA, LOW);
+    digitalWrite(dirB, HIGH);
   }
   //beweeg naar boven als coordinaat zich boven bevind
   else if(Yencoder < coordinaten[coordinaatIndex][1]){
-    YasAangekomen = false;
     analogWrite(pwmB, snelheid);
-    digitalWrite(dirA, HIGH);
+    digitalWrite(dirB, LOW);
   }
   //stop
   else{
     analogWrite(pwmB, 0);
+    //rem y
     YasAangekomen = true;
   }
 
