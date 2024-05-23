@@ -10,7 +10,7 @@
 //Encoder
 const int YencoderPin = 2;
 const int YrichtingPin = 4;
-int Yencoder = 0;
+volatile int Yencoder = 0;
 
 bool yasOmhoog = 0;
 bool bijCoordinaatAangekomen = 0;
@@ -116,6 +116,9 @@ void loop() {
       break;
     case AUTOMATISCH:
       //functies automatisch
+      if(bijCoordinaatAangekomen == true){
+        pakProduct();
+      }
       break;
   }
   // Serial.println(Yencoder);
@@ -330,6 +333,7 @@ void stuurStatus(){
   }
 }
 
+//TODO fixen status knop
 //Gebruikt de bovenste gele knop om tussen handmatige en automatische mode te wisselen
 unsigned long previousMillis3 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
 const unsigned long interval3 = 400; // Interval van 200 milliseconden
@@ -387,6 +391,23 @@ void handmatigBewegen() {
 }
 
 void pakProduct() {
+  zAsUit();
+
+  omhoogGegaan = false;
+  tweeNaarEen.setCharAt(0, 49); //Set 1
+
+  analogWrite(pwmA, 0);
+  analogWrite(pwmA, snelheid);
+  digitalWrite(dirA, HIGH);
+  delay(tijd);
+
+  analogWrite(pwmA, 0);
+
+  bijCoordinaatAangekomen = false;
+  aantalProducten++;
+}
+
+void zAsUit(){
   if (aantalProducten == 0) {
     tijd = 1100;
   }
@@ -399,22 +420,8 @@ void pakProduct() {
     tijd = 500;
   }
 
+  //Zas vooruit
   digitalWrite(dirA, LOW);
   analogWrite(pwmA, snelheid);
   delay(tijd);
-
-  omhoogGegaan = false;
-  tweeNaarEen.setCharAt(0, 49); //Set 1
-
-  while (omhoogGegaan == false) {
-    analogWrite(pwmA, 0);
-  }
-  analogWrite(pwmA, snelheid);
-  digitalWrite(dirA, HIGH);
-  delay(tijd);
-
-  analogWrite(pwmA, 0);
-
-  bijCoordinaatAangekomen = false;
-  aantalProducten++;
 }
