@@ -4,6 +4,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import Database.Database;
+import java.util.List;
 
 public class ControlPanel extends JPanel{
     GUIThemes guiTheme;
@@ -101,9 +103,8 @@ public class ControlPanel extends JPanel{
                 tempLabel.setBorder(gridBorder);
                 //Deze labels worden allemaal in het grid geplaatst
                 topPanelGrid.add(tempLabel);
-
-                Point point = new Point();
-                if (x == point.x && y == point.y){
+                //Als de x en y coördinaten overeenkomen met de x en y coördinaten van de robot, dan wordt de kleur van de label aangepast en de volgorde neergezet
+                  if (x == 2 && y == 2){
                     int text = 1;
                     tempLabel.setText(text+"");
                     tempLabel.setForeground(Color.GREEN);
