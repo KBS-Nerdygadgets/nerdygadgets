@@ -164,7 +164,6 @@ void serialRead() {
 
 void serialWrite(){
   Wire.write(eenNaarTwee.c_str());
-  // delay(5);
 }
 
 //Zet bericht om in variabelen
@@ -285,6 +284,8 @@ void automatischeFuncties(){
         analogWrite(pwmB, snelheid);
         digitalWrite(dirB, LOW);
       }
+      eenNaarTwee.setCharAt(0, 49); //Set y-as omhooggegaan op true
+      eenNaarTwee.setCharAt(1, 48): //Set bij coordinaat aangekomen op false
     }
   }
 }
