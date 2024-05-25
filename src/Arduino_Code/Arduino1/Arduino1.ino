@@ -92,6 +92,12 @@ bool drukSwitchBeneden = false;
 bool metaalLinks = false;
 bool metaalRechts = false;
 
+//Noodsstop
+bool noodStop = false;
+
+//Z-as
+bool uitgeschoven = false;
+
 //*Setup
 void setup() {
   delay(1200);
@@ -429,7 +435,7 @@ void leesMicroSwitches(){
     bool switch2State = digitalRead(msBoven);
     
     // Controleer of een van de schakelaars geactiveerd is
-    // Print naar de seriële monitor welke schakelaar is ingedrukt
+    // Print naar de seriÃ«le monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
       // Serial.println("Switch beneden is ingedrukt!");
       drukSwitchBeneden = true;
@@ -463,7 +469,7 @@ void leesInductiveSensoren(){
     bool indRechtsState = digitalRead(indRechts);
   
     // Controleer of een van de schakelaars geactiveerd is
-    // Print naar de seriële monitor welke schakelaar is ingedrukt
+    // Print naar de seriÃ«le monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
       // Serial.println("Nabijheid gedetecteerd aan de linkerkant");
       metaalLinks = true;
