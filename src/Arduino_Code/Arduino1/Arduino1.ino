@@ -24,6 +24,7 @@ const int dirA = 12;
 const int XencoderPin = 2;
 const int XrichtingPin = 4;
 int Xencoder = 0;
+int Yencoder = 0;
 int xValue = 0; // To store value of the X axis
 
 //Yas
@@ -44,16 +45,46 @@ const int indRechts = 5;
 const int resetKnopEncoder = 5;
 const int knopSwitchStatus = 6;
 
+//Status
+enum Modus {STOP, HANDMATIG, AUTOMATISCH};
+Modus huidigeModus = HANDMATIG;
+
 int status = 1;
 String richting = "";
 
+String eenNaarTwee = "000";
+
 //753 pulsen per coordinaat
-const int coordinaten[5][2] = {
-  {155, 0},   //5:1
-  {911, 0},   //5:2
-  {1664, 0},  //5:3
-  {2417, 0},  //5:4
-  {3170, 0}   //5:5
+const int coordinaten[25][2] = {
+  {155, 125},   //5:1
+  {911, 125},   //5:2
+  {1664, 125},  //5:3
+  {2417, 125},  //5:4
+  {3170, 125},   //5:5
+
+  {155, 542},   //4:1
+  {911, 542},   //4:2
+  {1664, 542},  //4:3
+  {2417, 542},  //4:4
+  {3170, 542},   //4:5
+
+  {155, 960},   //3:1
+  {911, 960},   //3:2
+  {1664, 960},  //3:3
+  {2417, 960},  //3:4
+  {3170, 960},   //3:5
+
+  {155, 1377},   //2:1
+  {911, 1377},   //2:2
+  {1664, 1377},  //2:3
+  {2417, 1377},  //2:4
+  {3170, 1377},   //2:5
+
+  {155, 1796},   //1:1
+  {911, 1796},   //1:2
+  {1664, 1796},  //1:3
+  {2417, 1796},  //1:4
+  {3170, 1796}   //1:5
 };
 
 //Uiteinde sensoren variablen
@@ -61,6 +92,12 @@ bool drukSwitchBoven = false;
 bool drukSwitchBeneden = false;
 bool metaalLinks = false;
 bool metaalRechts = false;
+
+//Noodsstop
+bool noodStop = false;
+
+//Z-as
+bool uitgeschoven = false;
 
 //*Setup
 void setup() {
@@ -96,74 +133,140 @@ void setup() {
 
   //seriele communicatie setup
   link.begin(9600);
-  pinMode(greenLED, OUTPUT);
 }
 
 //*Loop
 void loop() {
-  leesMicroSwitches();
-  leesInductiveSensoren();
-  activeerStatus();
-  comm1naar2();
-  //Druk de onderste knop in om de encoder te resetten. Dit moet op het nulpunt gebeuren
-  // Serial.print("Pulsen"); Serial.println(Xencoder);
+  functiesSensoren();
+  switch(huidigeModus){
+    case HANDMATIG:
+      handmatigeStatus();
+      break;
+    case STOP:
+      //functies noodstop
+      analogWrite(pwmA, 0);
+      analogWrite(pwmB, 0);
+      noodStop = true;
+      break;
+    case AUTOMATISCH:
+      //functies automatisch
+      break;
+  }
+  serialRead();
+  serialWrite(eenNaarTwee);
+  // Serial.println(Yencoder);
+  // Serial.println(Xencoder);
+  //activeerStatus();
+  leesStatus();
+  leesYencoder();
+}
+
+void leesYencoder() {
+  //belangrijk stukje
+  String input = cString;
+  int Yencoder = input.substring(1, 5).toInt();
+  delay(20);
+  Serial.println(Yencoder);
+  //belangrijk stukje einde
+}
+
+void leesStatus() {
+  //belangrijk stukje
+  String input = cString;
+  int status = input.substring(5).toInt();
+  delay(20);
+  if(status == 0){ // stop
+    huidigeModus = STOP;
+  }
+  if(status == 1) { // handmatig
+    if(noodStop == true){
+      noodstopReset();
+    } else {
+      huidigeModus = HANDMATIG;
+    }
+  } 
+  if(status == 2) { // automatisch
+    huidigeModus = AUTOMATISCH;
+  }
+  //belangrijk stukje einde
+}
+
+leesZas(){
+  String input = cString;
+  int zCheck = input.substring(0).toInt();
+  delay(20);
+  if(zCheck == 0){
+    uitgeschoven = false;
+  }
+  if(zCheck == 1){
+    uitgeschoven = true;
+  }
+}
+
+void noodstopReset(){
+  beginStiuatie();
+  noodStop = false;
+  huidigeModus = HANDMATIG;
+}
+
+void beginSituatie(){
+  // sturen 0 start beginstituatie
+
+  while(metaalLinks == false || drukSwitchBeneden == false){
+    functiesSensoren();
+    leesZas();
+
+    //z-as eerst ingeschoven voordat de rest mag bewegen
+    if(uitgeschoven == false){ 
+
+      //x-as naar links
+      if(metaalLinks == false){
+        analogWrite(pwmA, snelheidHandmatig);
+        digitalWrite(dirA, LOW);
+        analogWrite(pwmB, 0);
+      }
+
+      //y-as naar beneden
+      if(drukSwitchBeneden == false){
+        analogWrite(pwmB, snelheidHandmatig);
+        digitalWrite(dirB, HIGH);
+        analogWrite(pwmA, 0);
+      }
+    }
+  }
+  // sturen 1 klaar beginsituatie
 }
 
 //*Functies voor communicatie tussen Arduinos
 // Specify the message to send
-void comm1naar2(){
-  const char* messageToSend = "1to2";
+void serialWrite(String message){
+  const char* messageToSend = message.c_str();
   // Transmit the message
   if ((millis() - sendmessageMillis) > 200) {
   sendMessage(messageToSend);
   sendmessageMillis = millis();
   }
+}
+
+void serialRead() {
   while (link.available()) {
     char ch = link.read();
+
     if (chPos < sizeof(cString) - 1) { // Avoid buffer overflow
       cString[chPos++] = ch;
     }
   }
   if (chPos > 0) { // Check if there is any received data
     cString[chPos] = '\0'; // Terminate cString
-    // Serial.print(cString);
     chPos = 0; // Reset position for the next message
   }
 }
+
 // Function to transmit a message over the serial connection
 void sendMessage(const char* message) {
-  digitalWrite(greenLED, HIGH);
-  // link.println(message);
+  link.println(message);
   //Serial.println(message); // Print to local screen for debugging
-  digitalWrite(greenLED, LOW);
 }
-
-//*Functies voor de knoppen
-//Lees of de 2 knoppen zijn ingedrukt
-void activeerStatus(){
-  status = 1;
-
-  //Encoder wordt gereset;
-  if(digitalRead(resetKnopEncoder) == 0){
-    Xencoder = 0;
-  }
-
-  //Status wordt op automatisch gezet
-  if(digitalRead(knopSwitchStatus) == 0){
-      status = 2;
-  }
-
-  //Als knop niet is ingedrukt 
-  if(status == 1){
-    handmatigeStatus();
-  }
-
-  //Hou de bovenste knop ingedrukt om de automatische mode te activeren
-  else if(status == 2){
-    gaNaarCoordinaat(3);
-  }
-}
-
 
 //*Functies voor statussen
 void gaNaarCoordinaat(int coordinaatIndex){
@@ -210,13 +313,15 @@ void leesJoystick() {
 void geefRichting() {
   richting = "";
   // Joystick naar rechts
-  if (xValue > 700 && metaalRechts == false) {
-    richting += "1";
-  }
+  if (uitgeschoven == false){
+    if (xValue > 700 && metaalRechts == false) {
+      richting += "1";
+    }
 
-  // Joystick naar links
-  if (xValue < 300 && metaalLinks == false) {
-    richting += "2";
+    // Joystick naar links
+    if (xValue < 300 && metaalLinks == false) {
+      richting += "2";
+    }
   }
 
   // Joystick naar boven
@@ -236,8 +341,6 @@ void geefRichting() {
 
   //Serial.println(richting);
 }
-
-
 
 void handmatigBewegen() {
   //Zet de string om in een Int
@@ -313,7 +416,6 @@ void handmatigBewegen() {
 //*Functies voor sensoren
 unsigned long previousMillis = 0; // Variabele om de tijd bij te houden van de laatste keer dat de microswitches zijn gelezen
 const unsigned long interval = 300; // Interval van 100 milliseconden
-
 void leesMicroSwitches(){
   // Haal de huidige tijd op
   unsigned long currentMillis = millis();
@@ -328,19 +430,20 @@ void leesMicroSwitches(){
     bool switch2State = digitalRead(msBoven);
     
     // Controleer of een van de schakelaars geactiveerd is
-    // Print naar de seriële monitor welke schakelaar is ingedrukt
+    // Print naar de seriÃ«le monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
-      //Serial.println("Switch beneden is ingedrukt!");
-      drukSwitchBeneden = true; 
+      Serial.println("Switch beneden is ingedrukt!");
+      drukSwitchBeneden = true;
+      Yencoder = 0; //Yas bevind zich bij nulpunt, reset encoder voor accuraatheid
     }
     if (switch2State == HIGH) {
-      //Serial.println("Switch boven is ingedrukt!");
+      Serial.println("Switch boven is ingedrukt!");
       drukSwitchBoven = true; 
     }
     if (switch1State == LOW && switch2State == LOW) {
      //Serial.println("testmicro");
-     drukSwitchBoven = false;
-     drukSwitchBeneden = false;
+      drukSwitchBoven = false;
+      drukSwitchBeneden = false;
     }
   }
 }
@@ -354,25 +457,31 @@ void leesInductiveSensoren(){
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste keer dat de microswitches zijn gelezen
   if (currentMillis - previousMillis2 >= interval2) {
     previousMillis2 = currentMillis; // Reset de timer
-     
+    
     // Lees de status van de schakelaars
     bool indLinksState = digitalRead(indLinks);
     bool indRechtsState = digitalRead(indRechts);
   
     // Controleer of een van de schakelaars geactiveerd is
-    // Print naar de seriële monitor welke schakelaar is ingedrukt
+    // Print naar de seriÃ«le monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
-    //Serial.println("Nabijheid gedetecteerd aan de linkerkant");
-    metaalLinks = true;
+      Serial.println("Nabijheid gedetecteerd aan de linkerkant");
+      metaalLinks = true;
+      Xencoder = 0; //Xas bevind zich bij nulpunt, reset encoder voor accuraatheid
     }
     if (indRechtsState == LOW) {
-    //Serial.println("Nabijheid gedetecteerd aan de rechterkant");
-    metaalRechts = true;
+      Serial.println("Nabijheid gedetecteerd aan de rechterkant");
+      metaalRechts = true;
     } 
     if (indLinksState == HIGH && indRechtsState == HIGH) {
     //Serial.println("testmetaal");
-    metaalLinks = false;
-    metaalRechts = false;
+      metaalLinks = false;
+      metaalRechts = false;
     }
   }
+}
+
+void functiesSensoren(){
+  leesMicroSwitches();
+  leesInductiveSensoren();
 }
