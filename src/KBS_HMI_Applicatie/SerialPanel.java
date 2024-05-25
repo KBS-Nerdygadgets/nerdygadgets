@@ -5,7 +5,6 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 public class SerialPanel extends JPanel{
-    private GUIThemes guiTheme;
     private Dimension screenDimension;
     private JLabel rX, tX, rood, groen;
     private JButton connectionButton, settingsButton;
