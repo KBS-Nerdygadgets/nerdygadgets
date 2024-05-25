@@ -51,11 +51,6 @@ bool achterSafe = false;
 // Variable voor uitgeschovend detectie
 bool uitgeschoven = false;
 
-// NOODSTOP
-bool noodStop = false;
-bool handmatig = true;
-bool automatisch = false;
-
 //begin
 bool klaar = false;
 int aantalProducten = 0;
@@ -118,6 +113,7 @@ void setup() {
 //*Loop
 void loop() {
   functiesSensoren();
+
   switch(huidigeModus){
     case HANDMATIG:
       handmatigBewegen();
@@ -126,7 +122,6 @@ void loop() {
       noodstopReset();
       break;
     case AUTOMATISCH:
-      //functies automatisch
       if(bijCoordinaatAangekomen){
         pakProduct();
       }
@@ -246,23 +241,14 @@ void updateLEDs() {
       digitalWrite(redLED, HIGH);
       digitalWrite(yellowLED, LOW);
       digitalWrite(greenLED, LOW);
-      noodStop = true;
-      automatisch = false;
-      handmatig = false;
       break;
     case HANDMATIG:
       digitalWrite(yellowLED, HIGH);
       digitalWrite(greenLED, LOW);
-      handmatig = true;
-      noodStop = false;
-      automatisch = false;
       break;
     case AUTOMATISCH:
       digitalWrite(greenLED, HIGH);
       digitalWrite(yellowLED, LOW);
-      automatisch = true;
-      handmatig = false;
-      noodStop = false;
       break;
   }
 }
@@ -270,26 +256,22 @@ void updateLEDs() {
 unsigned long previousMillis3 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
 const unsigned long interval3 = 50; // Interval van 100 milliseconden
 void noodstopReset() {
-  unsigned long currentMillis = millis(); // Haal de huidige tijd op
-  bool microSchap = analogRead(msSchap); //Value van de sensor in var zetten
-  bool noodStopReset = digitalRead(buttonNoodStopReset); // status van de noodstop resetknop in een var zetten
+  unsigned long currentMillis = millis();                 // Haal de huidige tijd op
+  bool microSchap = analogRead(msSchap);                  //Value van de sensor in var zetten
+  bool noodStopReset = digitalRead(buttonNoodStopReset);  // status van de noodstop resetknop in een var zetten
   
-    // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
-    if (currentMillis - previousMillis3 >= interval3) {
-      previousMillis3 = currentMillis; // Reset de timer
+  // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
+  if (currentMillis - previousMillis3 >= interval3) {
+    previousMillis3 = currentMillis;                      // Reset de timer
 
     // Controleer of de knop is ingedrukt, het schap op zijn plek staat en of de debounce tijd voorbij is
-    if(noodStopReset == LOW && microSchap == HIGH && noodStop == true && (currentMillis - lastButtonPressTime >= debounceDelay)){
-      lastButtonPressTime = currentMillis; // Update de laatste knopdruk tijd
-      Serial.println("Noodstop reset");
-      if(noodStop == true){
-        
-        // Ga naar begin punt functie hier zetten
-        beginSituatie();
-        // het onderstaande willen we pas doen na dat de robot op zijn beginplek staat
-        noodStop = false; 
-        huidigeModus = HANDMATIG; updateLEDs(); // Ledjes updaten en modus veranderen
-      }
+    if(noodStopReset == LOW && microSchap == HIGH && huidigeModus == STOP && (currentMillis - lastButtonPressTime >= debounceDelay)){
+      lastButtonPressTime = currentMillis;               // Update de laatste knopdruk tijd
+      // Serial.println("Noodstop reset");
+      beginSituatie();
+      // het onderstaande willen we pas doen na dat de robot op zijn beginplek staat
+      huidigeModus = HANDMATIG;                           //Modus veranderen
+      updateLEDs();                                       // Ledjes updaten
     }
   }
 }
@@ -297,9 +279,9 @@ void noodstopReset() {
 void noodStopInitiatie(){
   bool noodStopStart = digitalRead(buttonNoodStop);
   if(noodStopStart == LOW){
-    huidigeModus = STOP; updateLEDs(); // Ledjes veranderen en updaten
-    Serial.println("Handmatige noodstop");
-    noodStop = true;
+    huidigeModus = STOP; //Modus veranderen
+    updateLEDs(); // Ledjes veranderen
+    // Serial.println("Handmatige noodstop");
   }
 }
 
@@ -328,7 +310,7 @@ void setStatus(){
     previousMillis3 = currentMillis; // Reset de timer
     bool setStatusBool = digitalRead(buttonNoodStopReset);
     
-    if(setStatusBool == LOW && noodStop == false){
+    if(setStatusBool == LOW && huidigeModus != STOP){
       switch (huidigeModus) {
         case HANDMATIG:
           huidigeModus = AUTOMATISCH;
@@ -349,7 +331,7 @@ void leesJoystick() {
 }
 
 void handmatigBewegen() {
-  if(noodStop == false){
+  if(huidigeModus != STOP){
     leesJoystick();
     // Achteruit
     if (yValue > 700) {
@@ -464,8 +446,8 @@ void leesMicroSchap(){
       //Serial.println("Testschap2"); //testen
       Serial.println("Automatische noodstop");
       analogWrite(pwmA, 0);
-      noodStop = true;
-      huidigeModus = STOP; updateLEDs(); // Ledjes veranderen en updaten
+      huidigeModus = STOP;
+      updateLEDs(); // Ledjes veranderen en updaten
     }
   }
 }
