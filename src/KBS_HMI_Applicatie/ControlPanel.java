@@ -6,7 +6,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class ControlPanel extends JPanel{
-    GUIThemes guiTheme;
     private Dimension screenDimension;
     private GridPoint robotLocation;
     private JPanel topPanel, topPanelGrid, bottomPanelBottom, bottomPanelTop;

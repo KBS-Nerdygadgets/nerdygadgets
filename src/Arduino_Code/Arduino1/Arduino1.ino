@@ -4,11 +4,10 @@
 #define VRY_PIN  A3 // Arduino pin connected to VRY pin
 
 ////////////////////////////
-// *** GROENE ARDUINO SLAVE*** //
+// *** GROENE ARDUINO *** //
 ////////////////////////////
 
 //seriele communicatie
-unsigned long sendmessageMillis = 0;
 const int slaveAddress1 = 8;
 const int slaveAddress2 = 9;
 
@@ -21,7 +20,7 @@ const int pwmA = 3;
 const int dirA = 12;
 const int XencoderPin = 2;
 const int XrichtingPin = 4;
-int Xencoder = 0;
+volatile int Xencoder = 0;
 int xValue = 0; // Joystick Xas
 bool XasAangekomen = false; //Automatische mode
 
@@ -29,15 +28,14 @@ bool XasAangekomen = false; //Automatische mode
 const int pwmB = 11;
 const int dirB = 13;
 const int brakeB = 8;
-int Yencoder = 0;
 int yValue = 0; // Joystick Yas
 bool YasAangekomen = false; //Automatische mode
 
-//Pins van de microswitches, ms = microswitch
+//Pins van de microswitches
 const int msBeneden = 10;
 const int msBoven = 7;
 
-//Pins van de inductive (metaal)sensoren, ind = inductive
+//Pins van de inductive (metaal)sensoren
 const int indLinks = 6;
 const int indRechts = 5;
 
@@ -45,6 +43,10 @@ const int indRechts = 5;
 enum Modus {STOP, HANDMATIG, AUTOMATISCH};
 Modus huidigeModus = HANDMATIG;
 
+enum Richting {Rechts, Links, Boven, Beneden};
+
+bool ZasUitgeschoven = false;
+int Yencoder = 0;
 int status = 1;
 String richting = "";
 String input = "";
@@ -89,6 +91,12 @@ bool drukSwitchBoven = false;
 bool drukSwitchBeneden = false;
 bool metaalLinks = false;
 bool metaalRechts = false;
+
+//Noodsstop
+bool noodStop = false;
+
+//Z-as
+bool uitgeschoven = false;
 
 //*Setup
 void setup() {
@@ -157,17 +165,16 @@ void serialRead() {
     char c = Wire.read();
     input += c;
   }
-  // delay(5);
   // Serial.println(input);
 }
 
 void serialWrite(){
   Wire.write(eenNaarTwee.c_str());
-  // delay(5);
 }
 
 //Zet bericht om in variabelen
 void leesString() {
+  ZasUitgeschoven = input.substring(0).toInt;
   Yencoder = input.substring(1, 5).toInt();
   status = input.substring(5).toInt();
   setStatus();
@@ -188,48 +195,107 @@ void setStatus() {
     huidigeModus = AUTOMATISCH;
   }
 }
+
+//richting true voor links, false voor rechts
+void moveX(Richting richting, int snelheid){
+  //rechts
+  if(richting == Rechts && metaalRechts == 1){
+    analogWrite(pwmA, 0)
+  }
+  //links
+  else if(richting == Links && metaalLinks == 1){
+    analogWrite(pwmA, 0);
+  }
+  else{
+    analogWrite(pwmA, snelheid);
+    if(richting == Rechts){
+      digitalWrite(dirA, HIGH);
+    }
+    if(richting == Links){
+      digitalWrite(dirA, LOW);
+    }
+  }
+}
+
+//richting true voor boven, false voor beneden
+void moveY(Richting richting, int snelheid){
+  //boven
+  if(richting == Boven && drukSwitchBoven == 1){
+    analogWrite(pwmB, 0)
+  }
+  //beneden
+  else if(richting == Beneden && drukSwitchBeneden == 1){
+    analogWrite(pwmB, 0);
+  }
+  else{
+    analogWrite(pwmB, snelheid);
+    if(richting == Beneden){
+      digitalWrite(dirA, HIGH);
+    }
+    if(richting == Boven){
+      digitalWrite(dirA, LOW);
+    }
+  }
+}
+
+//*Automatische functies
 //beweeg naar de coordinaat
 void gaNaarCoordinaat(int coordinaatIndex){
   //*Xas
   //beweeg naar links als coordinaat zich links bevind
-  if(Xencoder > (coordinaten[coordinaatIndex][0]+10)){
-    analogWrite(pwmA, snelheid);
-    digitalWrite(dirA, LOW);
-  }
-  //beweeg naar rechts als coordinaat zich rechts bevind
-  else if(Xencoder < (coordinaten[coordinaatIndex][0]-10)){
-    analogWrite(pwmA, snelheid);
-    digitalWrite(dirA, HIGH);
-  }
-  //stop
-  else{
-    analogWrite(pwmA, 0);
-    XasAangekomen = true;
+  if(!XasAangekomen){
+    if(Xencoder > (coordinaten[coordinaatIndex][0]+10)){\
+      moveX(Links, snelheid);
+    }
+    //beweeg naar rechts als coordinaat zich rechts bevind
+    else if(Xencoder < (coordinaten[coordinaatIndex][0]-10)){
+      moveX(Rechts, snelheid);
+    }
+    //stop
+    else{
+      analogWrite(pwmA, 0);
+      XasAangekomen = true;
+    }
   }
 
   //*Yas
   //beweeg naar beneden als coordinaat zich beneden bevind
-  if(Yencoder > coordinaten[coordinaatIndex][1]){
-    analogWrite(pwmB, snelheid);
-    digitalWrite(dirB, HIGH);
-  }
-  //beweeg naar boven als coordinaat zich boven bevind
-  else if(Yencoder < coordinaten[coordinaatIndex][1]){
-    analogWrite(pwmB, snelheid);
-    digitalWrite(dirB, LOW);
-  }
-  //stop
-  else{
-    analogWrite(pwmB, 0);
-    //rem y
-    YasAangekomen = true;
-  }
-
-  //Aangekomen op coordinaat? geef door naar Arduino 2
-  if(YasAangekomen && XasAangekomen){
-    eenNaarTwee.setCharAt(1, 49);
+  if(!YasAangekomen){
+    if(Yencoder > coordinaten[coordinaatIndex][1]){
+      moveY(Beneden, snelheid);
+    }
+    //beweeg naar boven als coordinaat zich boven bevind
+    else if(Yencoder < coordinaten[coordinaatIndex][1]){
+      moveY(Boven, snelheid)
+    }
+    //stop
+    else{
+      analogWrite(pwmB, 0);
+      //TODO rem y
+      YasAangekomen = true;
+    }
   }
 }
+
+void automatischeFuncties(){
+  gaNaarCoordinaat();
+  //Aangekomen op coordinaat? geef door naar Arduino 2
+  if(YasAangekomen && XasAangekomen){
+    eenNaarTwee.setCharAt(1, 49); //Set op 1
+    if(ZasUitgeschoven){
+      int tempYencoder = Yencoder + 50;
+      while(Yencoder < tempYencoder){
+        serialRead();
+        leesString();
+        analogWrite(pwmB, snelheid);
+        digitalWrite(dirB, LOW);
+      }
+      eenNaarTwee.setCharAt(0, 49); //Set y-as omhooggegaan op true
+      eenNaarTwee.setCharAt(1, 48): //Set bij coordinaat aangekomen op false
+    }
+  }
+}
+
 //lees de Xencoder
 void XleesEncoder() {
   if (digitalRead(XrichtingPin) == 1) {
@@ -257,22 +323,22 @@ void leesJoystick() {
 void geefRichting() {
   richting = "";
   // Joystick naar rechts
-  if (xValue > 700 && metaalRechts == false) {
+  if (xValue > 700) {
     richting += "1";
   }
 
   // Joystick naar links
-  if (xValue < 300 && metaalLinks == false) {
+  if (xValue < 300) {
     richting += "2";
   }
 
   // Joystick naar boven
-  if (yValue > 700 && drukSwitchBeneden == false) {
+  if (yValue > 700) {
     richting += "3";
   }
 
   // Joystick naar beneden
-  if (yValue < 300 && drukSwitchBoven == false) {
+  if (yValue < 300) {
     richting += "4";
   }
 
@@ -285,74 +351,63 @@ void geefRichting() {
 }
 
 //Beweeg motoren in richting
+//TODO functies voor beweging inclusief beveiliging (richting, handmatig)
 void handmatigBewegen() {
   //Zet de string om in een Int
   int var = richting.toInt();
   switch (var) {
     //X naar Rechts
     case 1:
-      analogWrite(pwmA, snelheidHandmatig);
-      digitalWrite(dirA, HIGH);
-      analogWrite(pwmB, 0);
+      moveX(Rechts, snelheidHandmatig);
+      analogWrite(pwmB, 0); //Stop Y
       break;
 
     //X naar Links
     case 2:
-      analogWrite(pwmA, snelheidHandmatig);
-      digitalWrite(dirA, LOW);
-      analogWrite(pwmB, 0);
+      moveX(Links, snelheidHandmatig);
+      analogWrite(pwmB, 0); //Stop Y
       break;
 
     //Y naar Beneden
     case 3:
-      analogWrite(pwmB, snelheidHandmatig);
-      digitalWrite(dirB, HIGH);
-      analogWrite(pwmA, 0);
+      MoveY(Beneden, snelheidHandmatig);
+      analogWrite(pwmA, 0); //Stop X
       break;
 
     //Y naar Boven
     case 4:
-      analogWrite(pwmB, snelheidHandmatig);
-      digitalWrite(dirB, LOW);
-      analogWrite(pwmA, 0);
+      MoveY(Boven, snelheidHandmatig);
+      analogWrite(pwmA, 0); //Stop X
       break;
       
     //rechts omhoog
     case 14:
-      analogWrite(pwmA, snelheidHandmatig);
-      digitalWrite(dirA, HIGH);
-      analogWrite(pwmB, snelheidHandmatig);
-      digitalWrite(dirB, LOW);
+      moveX(Rechts, snelheidHandmatig);
+      moveY(Boven, snelheidHandmatig);
       break;
 
     //links omhoog
     case 24:
-      analogWrite(pwmA, snelheidHandmatig);
-      digitalWrite(dirA, LOW);
-      analogWrite(pwmB, snelheidHandmatig);
-      digitalWrite(dirB, LOW);
+      MoveX(Links, snelheidHandmatig);
+      MoveY(Boven, snelheidHandmatig);
       break;
 
     //links omlaag
     case 23:
-      analogWrite(pwmA, snelheidHandmatig);
-      digitalWrite(dirA, LOW);  
-      analogWrite(pwmB, snelheidHandmatig);
-      digitalWrite(dirB, HIGH);
+      MoveX(Links, snelheidHandmatig);
+      MoveY(Beneden, snelheidHandmatig);
       break;
 
     //rechts omlaag
     case 13:
-      analogWrite(pwmA, snelheidHandmatig);
-      digitalWrite(dirA, HIGH);
-      analogWrite(pwmB, snelheidHandmatig);
-      digitalWrite(dirB, HIGH);
+      MoveX(Rechts, snelheidHandmatig);
+      MoveY(Beneden, snelheidHandmatig);
       break;
 
     //Stop
     default:
-      analogWrite(pwmA, 0);
-      analogWrite(pwmB, 0);
+      analogWrite(pwmA, 0); //Stop X
+      analogWrite(pwmB, 0); //Stop Y
   }
 }
 
@@ -380,7 +435,7 @@ void leesMicroSwitches(){
     bool switch2State = digitalRead(msBoven);
     
     // Controleer of een van de schakelaars geactiveerd is
-    // Print naar de seriële monitor welke schakelaar is ingedrukt
+    // Print naar de seriÃ«le monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
       // Serial.println("Switch beneden is ingedrukt!");
       drukSwitchBeneden = true;
@@ -414,7 +469,7 @@ void leesInductiveSensoren(){
     bool indRechtsState = digitalRead(indRechts);
   
     // Controleer of een van de schakelaars geactiveerd is
-    // Print naar de seriële monitor welke schakelaar is ingedrukt
+    // Print naar de seriÃ«le monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
       // Serial.println("Nabijheid gedetecteerd aan de linkerkant");
       metaalLinks = true;
