@@ -50,7 +50,10 @@ int Yencoder = 0;
 int status = 1;
 String richting = "";
 String input = "";
-bool opgepakt = false;
+
+//Automatische modus variabelen
+bool YomhoogOmOpTePakken = false;
+bool productOpgepakt = false;
 
 String eenNaarTwee = "000";
 
@@ -147,8 +150,12 @@ void loop() {
       //functies noodstop
       break;
     case AUTOMATISCH:
-      // Serial.println("Automatisch");
-      automatischeFuncties(12);
+      if(!productOpgepakt){
+        automatischeFuncties(12);
+      }
+      else{
+        Serial.println("Product is succesvol opgepakt");
+      }
       break;
   }
   serialRead();
@@ -196,7 +203,8 @@ void setStatus() {
     eenNaarTwee.setCharAt(1, 48); //reset communicatie voor auto modus
     XasAangekomen = false; //reset variabelen voor auto modus
     YasAangekomen = false; //reset variabelen voor auto modus
-    opgepakt = false; //reset variabele voor auto modus
+    YomhoogOmOpTePakken = false; //reset variabele voor auto modus
+    productOpgepakt = false;
   }
 
   if (status == 2) {
@@ -289,23 +297,28 @@ void gaNaarCoordinaat(int coordinaatIndex){
   }
 }
 
+void yAsOmhoog(){
+  eenNaarTwee.setCharAt(1, 49); //Set aangekomen op 1
+  if(ZasUitgeschoven){
+    int tempYencoder = Yencoder + 100;
+    while(Yencoder < tempYencoder && !YomhoogOmOpTePakken){
+      functiesSensoren();
+      serialRead();
+      moveY(Boven, snelheid);
+    }
+    YomhoogOmOpTePakken = true;
+    analogWrite(pwmB, 0);
+    eenNaarTwee.setCharAt(0, 49); //Set y-as omhooggegaan op true
+  }
+}
+
 void automatischeFuncties(int coordinaat){
   gaNaarCoordinaat(coordinaat);
   //Aangekomen op coordinaat? geef door naar Arduino 2
   if(YasAangekomen && XasAangekomen){
-    // Serial.println(input);
-    eenNaarTwee.setCharAt(1, 49); //Set aangekomen op 1
-    if(ZasUitgeschoven){
-      int tempYencoder = Yencoder + 100;
-      while(Yencoder < tempYencoder && !opgepakt){
-        functiesSensoren();
-        serialRead();
-        moveY(Boven, snelheid);
-      }
-      opgepakt = true;
-      analogWrite(pwmB, 0);
-      eenNaarTwee.setCharAt(0, 49); //Set y-as omhooggegaan op true
-      // eenNaarTwee.setCharAt(1, 48); //Set bij coordinaat aangekomen op false
+    yAsOmhoog();
+    if(!ZasUitgeschoven && YomhoogOmOpTePakken){
+      productOpgepakt = true;
     }
   }
 }

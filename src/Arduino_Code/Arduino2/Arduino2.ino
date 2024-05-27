@@ -56,6 +56,7 @@ int aantalProducten = 0;
 int tijd = 0;
 int delayOmhoog = 800;
 bool omhoogGegaan = false;
+bool productOpgepakt = false;
 
 String tweeNaarEen = "000000";
 String input = "";
@@ -64,7 +65,7 @@ String input = "";
 const int slaveAddress1 = 8;
 const int slaveAddress2 = 9;
 
-bool yasOmhoog = 0;
+bool yAsOmhoog = 0;
 bool bijCoordinaatAangekomen = 0;
 bool resettenYencoder = 0;
 
@@ -119,18 +120,23 @@ void loop() {
       noodstopReset();
       break;
     case AUTOMATISCH:
-      if(bijCoordinaatAangekomen){
-        pakProduct();
+      if(!productOpgepakt){
+        if(bijCoordinaatAangekomen){
+          pakProduct();
+        }
+        else{
+          digitalWrite(pwmA, 0);
+        }
       }
       else{
-        digitalWrite(pwmA, 0);
+        Serial.println("Product is succesvol opgepakt");
       }
       break;
   }
   serialRead();
   functiesStatussen();
   functiesSensoren();
-  Serial.println(input);
+  // Serial.println(input);
   // Serial.println(tweeNaarEen);
 }
 
@@ -151,7 +157,7 @@ void serialWrite(){
 }
 
 void leesString() {
-  yasOmhoog = input.substring(0, 1).toInt();
+  yAsOmhoog = input.substring(0, 1).toInt();
   bijCoordinaatAangekomen = input.substring(1, 2).toInt();
   resettenYencoder = input.substring(2, 3).toInt();
   if(resettenYencoder == 1){ //reset Yencoder op basis van input van Arduino 1
@@ -316,6 +322,7 @@ void setStatus(){
           break;
         case AUTOMATISCH:
           tweeNaarEen.setCharAt(0, 48); //Reset Automatische modus
+          productOpgepakt = false; //Reset Automatische modus
           huidigeModus = HANDMATIG;
           updateLEDs();
           break;
@@ -349,8 +356,13 @@ void handmatigBewegen() {
 
 //*Automatisch Functies
 void pakProduct() {
-    zAsUit();
-
+  zAsUit();
+  if(yAsOmhoog){
+    zAsIn();
+    if(!uitgeschoven){
+      productOpgepakt = true;
+    }
+  }
 }
 
 void zAsUit(){
@@ -358,9 +370,21 @@ void zAsUit(){
   moveZ(Buiten, snelheid);
   if(!voorSafe){
     digitalWrite(pwmA, 0); //Stop wanneer uitgeschoven
-    tweeNaarEen.setCharAt(0, 49); //Stuur Z is uitgeschoven naar Arduino 1
+    tweeNaarEen.setCharAt(0, 49); //Stuur 1, Z is uitgeschoven naar Arduino 1
+    aantalProducten++;
+    if(aantalProducten == 3){
+      //beweeg naar bak
+    }
   }
-  // delay(tijd);
+}
+
+void zAsIn(){
+  //Zas binnen
+  moveZ(Binnen, snelheid);
+  if(!uitgeschoven){
+    digitalWrite(pwmA, 0); //Stop wanneer uitgeschoven
+    tweeNaarEen.setCharAt(0, 48); //Stuur 0, Z is binnen naar Arduino 1
+  }
 }
 
 //*Sensoren
