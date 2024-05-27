@@ -46,7 +46,6 @@ enum Richting {Binnen, Buiten};
 
 //variabel voor afstandsensor
 bool voorSafe = false;
-bool achterSafe = false;
 
 // Variable voor uitgeschovend detectie
 bool uitgeschoven = false;
@@ -112,8 +111,6 @@ void setup() {
 
 //*Loop
 void loop() {
-  functiesSensoren();
-
   switch(huidigeModus){
     case HANDMATIG:
       handmatigBewegen();
@@ -125,11 +122,16 @@ void loop() {
       if(bijCoordinaatAangekomen){
         pakProduct();
       }
+      else{
+        digitalWrite(pwmA, 0);
+      }
       break;
   }
   serialRead();
   functiesStatussen();
-  // Serial.println(Yencoder);
+  functiesSensoren();
+  Serial.println(input);
+  // Serial.println(tweeNaarEen);
 }
 
 //*Functies voor de communicatie tussen Arduinos
@@ -140,7 +142,6 @@ void serialRead() {
     char c = Wire.read();
     input += c;
   }
-  Serial.println(input);
   leesString();
 }
 
@@ -150,10 +151,9 @@ void serialWrite(){
 }
 
 void leesString() {
-  Serial.println(input);
-  yasOmhoog = input.substring(0).toInt();
-  bijCoordinaatAangekomen = input.substring(1).toInt();
-  resettenYencoder = input.substring(2).toInt();
+  yasOmhoog = input.substring(0, 1).toInt();
+  bijCoordinaatAangekomen = input.substring(1, 2).toInt();
+  resettenYencoder = input.substring(2, 3).toInt();
   if(resettenYencoder == 1){ //reset Yencoder op basis van input van Arduino 1
     Yencoder = 0;
   }
@@ -202,12 +202,12 @@ void encoderInString() {
 
 //*Bewegen
 void moveZ(Richting richting, int snelheid){
-  //rechts
-  if(richting == Binnen && uitgeschoven == false){
-    analogWrite(pwmA, 0)
+  //Binnen
+  if(richting == Binnen && !uitgeschoven){
+    analogWrite(pwmA, 0);
   }
-  //links
-  else if(richting == Buiten && uitgeschoven == true){
+  //Buiten
+  else if(richting == Buiten && voorSafe == false){
     analogWrite(pwmA, 0);
   }
   else{
@@ -253,21 +253,20 @@ void updateLEDs() {
   }
 }
 
-unsigned long previousMillis3 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
-const unsigned long interval3 = 50; // Interval van 100 milliseconden
+unsigned long previousMillis1 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
+const unsigned long interval1 = 50; // Interval van 100 milliseconden
 void noodstopReset() {
   unsigned long currentMillis = millis();                 // Haal de huidige tijd op
   bool microSchap = analogRead(msSchap);                  //Value van de sensor in var zetten
   bool noodStopReset = digitalRead(buttonNoodStopReset);  // status van de noodstop resetknop in een var zetten
   
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
-  if (currentMillis - previousMillis3 >= interval3) {
-    previousMillis3 = currentMillis;                      // Reset de timer
+  if (currentMillis - previousMillis1 >= interval1) {
+    previousMillis1 = currentMillis;                      // Reset de timer
 
     // Controleer of de knop is ingedrukt, het schap op zijn plek staat en of de debounce tijd voorbij is
     if(noodStopReset == LOW && microSchap == HIGH && huidigeModus == STOP && (currentMillis - lastButtonPressTime >= debounceDelay)){
       lastButtonPressTime = currentMillis;               // Update de laatste knopdruk tijd
-      // Serial.println("Noodstop reset");
       beginSituatie();
       // het onderstaande willen we pas doen na dat de robot op zijn beginplek staat
       huidigeModus = HANDMATIG;                           //Modus veranderen
@@ -281,7 +280,6 @@ void noodStopInitiatie(){
   if(noodStopStart == LOW){
     huidigeModus = STOP; //Modus veranderen
     updateLEDs(); // Ledjes veranderen
-    // Serial.println("Handmatige noodstop");
   }
 }
 
@@ -317,6 +315,7 @@ void setStatus(){
           updateLEDs();
           break;
         case AUTOMATISCH:
+          tweeNaarEen.setCharAt(0, 48); //Reset Automatische modus
           huidigeModus = HANDMATIG;
           updateLEDs();
           break;
@@ -335,7 +334,7 @@ void handmatigBewegen() {
     leesJoystick();
     // Achteruit
     if (yValue > 700) {
-      moveZ(Binnen, snelheidHandmatig)
+      moveZ(Binnen, snelheidHandmatig);
     }
     // Vooruit
     else if (yValue < 300) {
@@ -350,44 +349,18 @@ void handmatigBewegen() {
 
 //*Automatisch Functies
 void pakProduct() {
-  if(!uitgeschoven && achterSafe){
-    uitschuivenZas();
-  }
+    zAsUit();
 
-  else if(uitgeschoven){
-    analogWrite(pwmA, 0);
-    tweeNaarEen.setCharAt(0, 49); //Set Z-as uitgeschoven op true
-    if(yasOmhoog){
-      //Achteruit
-      moveZ(Binnen, snelheid);
-      delay(tijd);
-      analogWrite(pwmA, 0);
-      bijCoordinaatAangekomen = false;
-      aantalProducten++;
-    }
-  }
-
-  else{
-    Serial.println("Pakproduct doet het niet swa")
-  }
 }
 
 void zAsUit(){
-  if (aantalProducten == 0) {
-    tijd = 1100;
-  }
-
-  else if (aantalProducten == 1) {
-    tijd = 1000;
-  }
-
-  else if (aantalProducten == 2) {
-    tijd = 500;
-  }
-
   //Zas vooruit
   moveZ(Buiten, snelheid);
-  delay(tijd);
+  if(!voorSafe){
+    digitalWrite(pwmA, 0); //Stop wanneer uitgeschoven
+    tweeNaarEen.setCharAt(0, 49); //Stuur Z is uitgeschoven naar Arduino 1
+  }
+  // delay(tijd);
 }
 
 //*Sensoren
@@ -397,7 +370,7 @@ void functiesSensoren(){
 }
 
 unsigned long previousMillis = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
-const unsigned long interval = 200; // Interval van 100 milliseconden
+const unsigned long interval = 100; // Interval van 100 milliseconden
 void leesDistanceSensorZ(){
   unsigned long currentMillis = millis(); // Huidige tijd ophalen
 
@@ -406,26 +379,22 @@ void leesDistanceSensorZ(){
     previousMillis = currentMillis; // Reset de timer
     float volts = analogRead(distanceSensorZ);// Value van de sensor in var zetten
   
-    // PRINT AFSTAND NAAR SERIELE MONITOR
     // Serial.print("Afstand vork: "); Serial.println(volts); //distance is tussen 650 en 300
       
     //De Z as staat helemaal naar binnen
     if(volts >= 640){
-      achterSafe = true;
       uitgeschoven = false;
-      tweeNaarEen.setCharAt(0, 48); //Set 0, stuur naar Arduino 1 dat zas naar binnen staat
     }
-    else if (volts < 310){
+    else if (volts < 330){
+      voorSafe = false;
+    }
+    else if ( volts > 330 && volts < 640){
       voorSafe = true;
     }
-    else if ( volts > 311 && volts < 640){ // NIet compleet accuraat, bijwerken
-      voorSafe = false;
-      achterSafe = false;
-    }
+
     //De Z as staat helemaal naar buiten
     if (volts < 640){
       uitgeschoven = true;
-      tweeNaarEen.setCharAt(0, 49); //Set 1, Stuur naar arduino 1 dat zas naar buiten staat
     } 
   }
 } 
@@ -438,13 +407,10 @@ void leesMicroSchap(){
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
   if (currentMillis - previousMillis2 >= interval2) {
     previousMillis2 = currentMillis; // Reset de timer
-    //Serial.println("Testschap1"); //testen
     bool microSchap = digitalRead(msSchap); //Value van de sensor in var zetten
     // Print de afstand naar de seriÃ«le monitor
     
     if(microSchap == LOW){
-      //Serial.println("Testschap2"); //testen
-      Serial.println("Automatische noodstop");
       analogWrite(pwmA, 0);
       huidigeModus = STOP;
       updateLEDs(); // Ledjes veranderen en updaten
