@@ -6,7 +6,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class OrderPanel extends JPanel{
-    private GUIThemes guiTheme;
     private Dimension screenDimension;
     private JPanel ordersPanel, buttonsPanel, managebuttonPanel, startbuttonPanel;
     private JButton manageOrderButton, startOrderButton;
