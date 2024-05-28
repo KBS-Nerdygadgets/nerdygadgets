@@ -4,13 +4,22 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.List;
+import TSP.Main;
+import TSP.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class OrderPanel extends JPanel{
     private Dimension screenDimension;
     private JPanel ordersPanel, buttonsPanel, managebuttonPanel, startbuttonPanel;
-    private JButton manageOrderButton, startOrderButton;
+    private JComboBox<String> selectOrderBox;
+    private JButton startOrderButton;//, selectOrderBox;
     private JLabel orderLabel, orders;
-    
+    private JComboBox<String> selectedPointsBox;
+    private JButton confirmSelectionButton;
+
+
     public OrderPanel(Dimension screenDimension){
         this.screenDimension = screenDimension;
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast
@@ -66,19 +75,90 @@ public class OrderPanel extends JPanel{
         startbuttonPanel.setBorder(panelBorderDimensions);
         startbuttonPanel.setPreferredSize(buttonPanelDimensions);
 
-        //De knop die in het manage paneel geplaatst zal worden
-        manageOrderButton = new JButton("Manage order");
-        manageOrderButton.setBackground(buttonColor);
-        manageOrderButton.setForeground(foregroundColor);
-        manageOrderButton.setPreferredSize(buttonDimensions);
-        manageOrderButton.setFont(new Font(manageOrderButton.getFont().getName(), Font.PLAIN, 20));
-
-        //De knop die in het start paneel geplaatst zal worden
-        startOrderButton = new JButton("Start order");
+// De knop die de start order knop in het startOrderButton
+        startOrderButton = new JButton("Start Order");
         startOrderButton.setBackground(buttonColor);
         startOrderButton.setForeground(foregroundColor);
         startOrderButton.setPreferredSize(buttonDimensions);
         startOrderButton.setFont(new Font(startOrderButton.getFont().getName(), Font.PLAIN, 20));
+        startOrderButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Verplaats de geselecteerde items naar orderLabel
+                StringBuilder orderText = new StringBuilder("Order: ");
+                for (int i = 0; i < selectedPointsBox.getItemCount(); i++) {
+                    orderText.append(selectedPointsBox.getItemAt(i));
+                    if (i < selectedPointsBox.getItemCount() - 1) {
+                        orderText.append(", ");
+                    }
+                }
+                orderLabel.setText(orderText.toString());
+                // Wis de selectie in selectedPointsBox
+                selectedPointsBox.removeAllItems();
+                // Reset de bevestigingsknop zodat deze weer kan worden gebruikt
+                confirmSelectionButton.setEnabled(true);
+            }
+        });
+
+        // De combobox die in het start paneel geplaatst zal worden
+        selectOrderBox = new JComboBox<>();
+        selectOrderBox.setBackground(buttonColor);
+        selectOrderBox.setForeground(foregroundColor);
+        selectOrderBox.setPreferredSize(buttonDimensions);
+        selectOrderBox.setFont(new Font(selectOrderBox.getFont().getName(), Font.PLAIN, 20));
+        // Fetch and populate points in the combobox
+        populateComboBox();
+
+        //De knop die in het start paneel geplaatst zal worden
+//        selectOrderBox = new JButton("Start order");
+//        selectOrderBox.setBackground(buttonColor);
+//        selectOrderBox.setForeground(foregroundColor);
+//        selectOrderBox.setPreferredSize(buttonDimensions);
+//        selectOrderBox.setFont(new Font(selectOrderBox.getFont().getName(), Font.PLAIN, 20));
+
+        // De combobox voor de geselecteerde punten
+        selectedPointsBox = new JComboBox<>();
+        selectedPointsBox.setBackground(buttonColor);
+        selectedPointsBox.setForeground(foregroundColor);
+        selectedPointsBox.setPreferredSize(buttonDimensions);
+        selectedPointsBox.setFont(new Font(selectedPointsBox.getFont().getName(), Font.PLAIN, 20));
+
+// De knop om de selectie te bevestigen
+        confirmSelectionButton = new JButton("Confirm");
+        confirmSelectionButton.setBackground(buttonColor);
+        confirmSelectionButton.setForeground(foregroundColor);
+        confirmSelectionButton.setPreferredSize(buttonDimensions);
+        confirmSelectionButton.setFont(new Font(confirmSelectionButton.getFont().getName(), Font.PLAIN, 20));
+        confirmSelectionButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Haal de geselecteerde waarde van de selectOrderBox op
+                Object selectedObject = selectOrderBox.getSelectedItem();
+                if (selectedObject != null) {
+                    String selectedOrder = (String) selectedObject;
+                    // Voeg de geselecteerde waarde toe aan de selectedPointsBox als deze nog niet is toegevoegd en er minder dan 3 items zijn
+                    if (selectedPointsBox.getItemCount() < 3) {
+                        // Controleer of het geselecteerde item niet al in selectedPointsBox zit
+                        boolean alreadyAdded = false;
+                        for (int i = 0; i < selectedPointsBox.getItemCount(); i++) {
+                            if (selectedOrder.equals(selectedPointsBox.getItemAt(i))) {
+                                alreadyAdded = true;
+                                break;
+                            }
+                        }
+                        if (!alreadyAdded) {
+                            selectedPointsBox.addItem(selectedOrder);
+                        }
+                        // Als er 3 items zijn toegevoegd, blokkeer verdere toevoegingen
+                        if (selectedPointsBox.getItemCount() == 3) {
+                            confirmSelectionButton.setEnabled(false);
+                        }
+                    }
+                }
+            }
+        });
+
+
 
         //Alles wordt toegevoegd in de panelen
         add(orders, BorderLayout.NORTH);
@@ -87,9 +167,24 @@ public class OrderPanel extends JPanel{
         ordersPanel.add(buttonsPanel, BorderLayout.CENTER);
 
         buttonsPanel.add(managebuttonPanel, BorderLayout.WEST);
-        managebuttonPanel.add(manageOrderButton);
+        managebuttonPanel.add(selectOrderBox);
+        managebuttonPanel.add(confirmSelectionButton);
 
         buttonsPanel.add(startbuttonPanel, BorderLayout.EAST);
+        startbuttonPanel.add(selectedPointsBox);
         startbuttonPanel.add(startOrderButton);
+    }
+
+    private void populateComboBox() {
+        // Fetch points using the TSP.Main class
+        List<Point> points = Main.fetchPoints();
+        // Remove the first point (start point) if needed
+        if (!points.isEmpty()) {
+            points.remove(0);
+        }
+        // Convert points to string and add to combobox
+        for (Point p : points) {
+            selectOrderBox.addItem("(" + p.x + ", " + p.y + ")");
+        }
     }
 }
