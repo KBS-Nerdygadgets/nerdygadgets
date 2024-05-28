@@ -56,7 +56,6 @@ int aantalProducten = 0;
 int tijd = 0;
 int delayOmhoog = 800;
 bool omhoogGegaan = false;
-bool productOpgepakt = false;
 
 String tweeNaarEen = "000000";
 String input = "";
@@ -65,7 +64,7 @@ String input = "";
 const int slaveAddress1 = 8;
 const int slaveAddress2 = 9;
 
-bool yAsOmhoog = 0;
+bool yasOmhoog = 0;
 bool bijCoordinaatAangekomen = 0;
 bool resettenYencoder = 0;
 
@@ -120,23 +119,18 @@ void loop() {
       noodstopReset();
       break;
     case AUTOMATISCH:
-      if(!productOpgepakt){
-        if(bijCoordinaatAangekomen){
-          pakProduct();
-        }
-        else{
-          digitalWrite(pwmA, 0);
-        }
+      if(bijCoordinaatAangekomen){
+        pakProduct();
       }
       else{
-        Serial.println("Product is succesvol opgepakt");
+        digitalWrite(pwmA, 0);
       }
       break;
   }
   serialRead();
   functiesStatussen();
   functiesSensoren();
-  // Serial.println(input);
+  Serial.println(input);
   // Serial.println(tweeNaarEen);
 }
 
@@ -157,7 +151,7 @@ void serialWrite(){
 }
 
 void leesString() {
-  yAsOmhoog = input.substring(0, 1).toInt();
+  yasOmhoog = input.substring(0, 1).toInt();
   bijCoordinaatAangekomen = input.substring(1, 2).toInt();
   resettenYencoder = input.substring(2, 3).toInt();
   if(resettenYencoder == 1){ //reset Yencoder op basis van input van Arduino 1
@@ -265,7 +259,7 @@ void noodstopReset() {
   unsigned long currentMillis = millis();                 // Haal de huidige tijd op
   bool microSchap = analogRead(msSchap);                  //Value van de sensor in var zetten
   bool noodStopReset = digitalRead(buttonNoodStopReset);  // status van de noodstop resetknop in een var zetten
-  
+     
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
   if (currentMillis - previousMillis1 >= interval1) {
     previousMillis1 = currentMillis;                      // Reset de timer
@@ -308,27 +302,32 @@ void stuurStatus(){
 unsigned long previousMillis3 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
 const unsigned long interval3 = 300; // Interval van 200 milliseconden
 void setStatus(){
+  static bool vorigeKnopStatus = HIGH;  
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
-  // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
-  if (currentMillis - previousMillis3 >= interval3) {
-    previousMillis3 = currentMillis; // Reset de timer
-    bool setStatusBool = digitalRead(buttonNoodStopReset);
+  bool setStatusBool = digitalRead(buttonNoodStopReset);  
+
+  if(setStatusBool == LOW && vorigeKnopStatus == HIGH){
+    // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
+    if (currentMillis - previousMillis3 >= interval3) {
+      previousMillis3 = currentMillis; // Reset de timer
+
     
-    if(setStatusBool == LOW && huidigeModus != STOP){
-      switch (huidigeModus) {
-        case HANDMATIG:
-          huidigeModus = AUTOMATISCH;
-          updateLEDs();
-          break;
-        case AUTOMATISCH:
-          tweeNaarEen.setCharAt(0, 48); //Reset Automatische modus
-          productOpgepakt = false; //Reset Automatische modus
-          huidigeModus = HANDMATIG;
-          updateLEDs();
-          break;
+      if(setStatusBool == LOW && huidigeModus != STOP){
+        switch (huidigeModus) {
+          case HANDMATIG:
+            huidigeModus = AUTOMATISCH;
+            updateLEDs();
+            break;
+          case AUTOMATISCH:
+            tweeNaarEen.setCharAt(0, 48); //Reset Automatische modus
+            huidigeModus = HANDMATIG;
+            updateLEDs();
+            break;
+        }
       }
     }
   }
+  vorigeKnopStatus = setStatusBool;
 }
 
 //* Handmatig Functies
@@ -356,13 +355,8 @@ void handmatigBewegen() {
 
 //*Automatisch Functies
 void pakProduct() {
-  zAsUit();
-  if(yAsOmhoog){
-    zAsIn();
-    if(!uitgeschoven){
-      productOpgepakt = true;
-    }
-  }
+    zAsUit();
+
 }
 
 void zAsUit(){
@@ -370,21 +364,9 @@ void zAsUit(){
   moveZ(Buiten, snelheid);
   if(!voorSafe){
     digitalWrite(pwmA, 0); //Stop wanneer uitgeschoven
-    tweeNaarEen.setCharAt(0, 49); //Stuur 1, Z is uitgeschoven naar Arduino 1
-    aantalProducten++;
-    if(aantalProducten == 3){
-      //beweeg naar bak
-    }
+    tweeNaarEen.setCharAt(0, 49); //Stuur Z is uitgeschoven naar Arduino 1
   }
-}
-
-void zAsIn(){
-  //Zas binnen
-  moveZ(Binnen, snelheid);
-  if(!uitgeschoven){
-    digitalWrite(pwmA, 0); //Stop wanneer uitgeschoven
-    tweeNaarEen.setCharAt(0, 48); //Stuur 0, Z is binnen naar Arduino 1
-  }
+  // delay(tijd);
 }
 
 //*Sensoren
