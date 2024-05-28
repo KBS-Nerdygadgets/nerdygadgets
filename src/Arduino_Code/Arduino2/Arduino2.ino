@@ -320,6 +320,7 @@ void setStatus(){
             break;
           case AUTOMATISCH:
             tweeNaarEen.setCharAt(0, 48); //Reset Automatische modus
+            productOpgepakt = false; //Reset Automatische modus
             huidigeModus = HANDMATIG;
             updateLEDs();
             break;
