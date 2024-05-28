@@ -48,4 +48,42 @@ public class Database {
 
         return points;
     }
+
+    public static int fetchGewichtFromDatabase(int stockItemID) {
+        int gewicht = 0;
+
+        // JDBC Connection Parameters
+        String url = "jdbc:mysql://localhost:3306/nerdygadgets";
+        String username = "root";
+        String password = "";
+
+        // SQL query
+        String query = "SELECT * FROM orderlines WHERE StockItemID = " + stockItemID + " && OrderID < 9";
+
+        try {
+            // Establish connection
+            Connection connection = DriverManager.getConnection(url, username, password);
+
+            // Create statement
+            Statement statement = connection.createStatement();
+
+            // Execute query
+            ResultSet resultSet = statement.executeQuery(query);
+
+            // Process results
+            while (resultSet.next()) {
+                // Retrieve data from the result set
+                gewicht = resultSet.getInt("Weight");
+            }
+
+            // Exit resources
+            resultSet.close();
+            statement.close();
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return gewicht;
+    }
 }
