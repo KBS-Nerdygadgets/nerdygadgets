@@ -7,3 +7,4 @@ public class Main {
         new GUIManager(new Dimension(1000, 700));
     }
 }
+

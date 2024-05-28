@@ -11,7 +11,7 @@ public class StatusPanel extends JPanel{
     private JPanel statusPanel, logsPanel, statusLabelPanel, statusPanelLabel, statusLights;
     private JLabel statusLabel, status, stoplicht;
     private JLabel logs;
-    private JTextField statussen;
+    private JTextArea statussen;
 
     public StatusPanel(Dimension screenDimension){
         this.screenDimension = screenDimension;
@@ -42,6 +42,9 @@ public class StatusPanel extends JPanel{
         statusPanelLabel = new JPanel(new FlowLayout());
         statusPanelLabel.setBackground(darkGray);
         statusLabelPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
+
+        JScrollPane scrollPane = new JScrollPane(statussen, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setPreferredSize(new Dimension(20, 300));
 
         //Status kan geset worden op Stop, Manual of Automatic
         String modus = "Automatic"; // later aanpassen, aanvangen vanaf arduino
@@ -90,13 +93,21 @@ public class StatusPanel extends JPanel{
         statusPanel.setPreferredSize(statusPanelDimension);
 
         //Het textfield dat in het statuspaneel geplaatst wordt wordt aangemaakt
-        statussen = new JTextField();
+        statussen = new JTextArea();
         Dimension statussenDimension = new Dimension(460, 19 * statussen.getFontMetrics(statussen.getFont()).getHeight());
         statussen.setForeground(Color.yellow);
         statussen.setBorder(statussenBorder);
         statussen.setBackground(background);
-        statussen.setHorizontalAlignment(SwingConstants.LEFT);
+        //statussen.setHorizontalAlignment(SwingConstants.LEFT);
         statussen.setPreferredSize(statussenDimension);
+        statussen.setEditable(false);
+        statussen.add(scrollPane, BorderLayout.WEST); // scrollPane in het midden
+
+
+
+        //frame.add(scrollPane, BorderLayout.CENTER);
+        //frame.setVisible(true);
+
 
         //Alle onderdelen worden samengevoegd
         add(statusLabelPanel, BorderLayout.NORTH);
@@ -108,8 +119,41 @@ public class StatusPanel extends JPanel{
         statusLights.add(status);
 
         add(logsPanel, BorderLayout.CENTER);
-        logsPanel.add(logs, BorderLayout.CENTER);
+        logsPanel.add(logs, BorderLayout.SOUTH);
+
         add(statusPanel, BorderLayout.SOUTH);
-        statusPanel.add(statussen);
+        statusPanel.add(statussen); // Gooi statussen in statuspanel
+        voegLogRegelToe("jjlkjlkj");
+        voegLogRegelToe("patat \n patat \n patat\n patat\n patat\n patat\n patat\n patat\n patat");
+
+        // Noodstop knop
+        voegLogRegelToe("Er is op de noodstopknop gedrukt");
+
+        // Noodstop schap
+        voegLogRegelToe("Schap is omgevallen/verschoven");
+
+        // Noodstop reset
+        voegLogRegelToe("Noodstopknop is gereset");
+
+        // Modus hand > auto
+        voegLogRegelToe("Modus: Handmatig > automatisch");
+
+        // Modys Auto > hand
+        voegLogRegelToe("Modus: Automatisch > handmatig");
+
+        // Taak (haal op 1:1, ....)
+        voegLogRegelToe("De robot komt shit op halen uit 1:1, 4:5 en 3:2");
     }
+
+    //String logtekst = "";
+    // Functie om tekst te printen in de logs
+    public void voegLogRegelToe(String tekst){
+        statussen.append(tekst + "\n");
+        // Zorgt ervoor dat de scrollbar automatisch naar beneden scrolt
+        statussen.setCaretPosition(statussen.getDocument().getLength());
+    }
+
 }
+
+
+
