@@ -257,6 +257,13 @@ void moveY(Richting richting, int snelheid){
   }
 }
 
+void gaNaarDoos(){
+  leesInductiveSensoren();
+  if(metaalRechts == false){
+    moveX(Rechts, snelheid);
+  }
+}
+
 //*Automatische functies
 //beweeg naar de coordinaat
 void gaNaarCoordinaat(int coordinaatIndex){
