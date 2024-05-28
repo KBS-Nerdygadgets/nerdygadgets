@@ -5,6 +5,7 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import Database.Database;
+import TSP.NearestNeighbor;
 import java.util.List;
 
 public class ControlPanel extends JPanel{
@@ -12,8 +13,25 @@ public class ControlPanel extends JPanel{
     private GridPoint robotLocation;
     private JPanel topPanel, topPanelGrid, bottomPanelBottom, bottomPanelTop;
     private JLabel schapLabel, robotLocationLabel, unvisitedProductLabel, robotPathLabel, fetchedProductLabel, legendLabel;
+    private int text = 1;
     
     public ControlPanel(Dimension screenDimension){
+
+                        // Punten halen van de database
+                List<TSP.Point> points = Database.fetchPointsFromDatabase();
+        
+                // Als er geen punten zijn, stoppen
+                if (points.isEmpty()) {
+                    System.out.println("No points found in the database.");
+                    return;
+                }
+        
+                // Het startpunt van de robot
+                TSP.Point start = points.remove(0);
+        
+                // De Nearest Neighbour Algorithm toepassen
+                List<TSP.Point> path = NearestNeighbor.nearestNeighborAlgorithm(start, points);
+
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast
         Color darkGray = new Color(51, 51, 51);
         Color background = new Color(35, 35, 35);
@@ -40,7 +58,7 @@ public class ControlPanel extends JPanel{
         topPanel.setPreferredSize(topPanelDimension);
 
         //Het label bovenaan het bovenste paneel wordt aangemaakt en aangepast
-        schapLabel = new JLabel("Schap");
+        schapLabel = new JLabel("Shelf");
         schapLabel.setForeground(foregroundColor);
         schapLabel.setFont(new Font(schapLabel.getFont().getName(), Font.PLAIN, 40));
         schapLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -63,7 +81,7 @@ public class ControlPanel extends JPanel{
         bottomPanelBottom.setPreferredSize(new Dimension(bottomPanelDimension.width, bottomPanelDimension.height/10*5));
 
         //Het legend label wordt aangemaakt
-        legendLabel = new JLabel("Legenda");
+        legendLabel = new JLabel("Legend");
         legendLabel.setForeground(foregroundColor);
         legendLabel.setFont(new Font(schapLabel.getFont().getName(), Font.PLAIN, bottomPanelLabelSize));
         legendLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -103,11 +121,11 @@ public class ControlPanel extends JPanel{
                 //Deze labels worden allemaal in het grid geplaatst
                 topPanelGrid.add(tempLabel);
                 //Als de x en y coördinaten overeenkomen met de x en y coördinaten van de robot, dan wordt de kleur van de label aangepast en de volgorde neergezet
-                  if (x == 2 && y == 2){
-                    int text = 1;
-                    tempLabel.setText(text+"");
-                    tempLabel.setForeground(Color.GREEN);
-                    text++;
+                for (TSP.Point p : path) {
+                    if (x == p.y && y == p.x) {
+                        tempLabel.setText("U.P.");
+                        tempLabel.setForeground(Color.RED);
+                    }
                 }
             }
         }

@@ -43,15 +43,29 @@ public class StatusPanel extends JPanel{
         statusLabelPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
 
         //Status kan geset worden op Stop, Manual of Automatic
-        status = new JLabel("Manual");
+        String modus = "Automatic"; // later aanpassen, aanvangen vanaf arduino
+        String modusIcon = "1"; // ~
+        switch (modus){
+            case "Manual":
+                modusIcon = "src/KBS_HMI_Applicatie/Icons/yellowCircle15.png";
+                break;
+            case "Stop":
+                modusIcon = "src/KBS_HMI_Applicatie/Icons/redCircle15.png";
+                break;
+
+            case "Automatic":
+                modusIcon = "src/KBS_HMI_Applicatie/Icons/greenCircle15.png";
+                break;
+        }
+        status = new JLabel(modus); // Modus var om de juiste tekst te tonen
         status.setForeground(foregroundColor);
         status.setFont(new Font(status.getFont().getName(), Font.PLAIN, 20));
         //Het lampje dat naast de status weergegeven wordt
-        Icon yellowIcon = new ImageIcon("src/KBS_HMI_Applicatie/Icons/yellowCircle15.png");
-        stoplicht = new JLabel(yellowIcon);
+        Icon Icon = new ImageIcon(modusIcon); // Juiste icoontje uit een var
+        stoplicht = new JLabel(Icon);
 
         //Het Label bovenaan het status paneel wordt aangemaakt
-        statusLabel = new JLabel("Status");
+        statusLabel = new JLabel("State");
         statusLabel.setForeground(foregroundColor);
         statusLabel.setFont(new Font(statusLabel.getFont().getName(), Font.PLAIN, 40));
 
