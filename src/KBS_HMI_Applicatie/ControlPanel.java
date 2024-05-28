@@ -123,9 +123,8 @@ public class ControlPanel extends JPanel{
                 //Als de x en y coördinaten overeenkomen met de x en y coördinaten van de robot, dan wordt de kleur van de label aangepast en de volgorde neergezet
                 for (TSP.Point p : path) {
                     if (x == p.y && y == p.x) {
-                        tempLabel.setText(text+"");
-                        tempLabel.setForeground(Color.GREEN);
-                        text++;
+                        tempLabel.setText("U.P.");
+                        tempLabel.setForeground(Color.RED);
                     }
                 }
             }
