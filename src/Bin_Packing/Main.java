@@ -19,9 +19,9 @@ public class Main {
         productID.add(128);
         productID.add(121);
 
-        int binCapaciteit = 7;
+//        ArrayList<Bin> bins = First_Fit_Decreasing.firstFitDecreasing(productID);
+//        First_Fit_Decreasing.printBins(bins);
 
-        ArrayList<Bin> bins = First_Fit_Decreasing.firstFitDecreasing(productID, binCapaciteit);
-        First_Fit_Decreasing.printBins(bins);
+        System.out.println(First_Fit_Decreasing.firstFitDecreasing(productID));
     }
 }

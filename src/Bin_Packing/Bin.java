@@ -13,7 +13,7 @@ public class Bin {
     }
 
     public boolean voegItemToe(Product product){
-        if(ruimte >= product.gewicht){
+        if(ruimte >= product.gewicht && producten.size() < 3){
             ruimte -= product.gewicht;
             this.producten.add(product);
             return true;

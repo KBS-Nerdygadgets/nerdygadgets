@@ -5,7 +5,8 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class First_Fit_Decreasing {
-    public static ArrayList<Bin> firstFitDecreasing(ArrayList<Integer> stockItemIDs, int binCapaciteit){
+    public static ArrayList<ArrayList<Integer>> firstFitDecreasing(ArrayList<Integer> stockItemIDs){
+        int binCapaciteit = 10;
         ArrayList<Product> alleProducten = new ArrayList<>();
         for (Integer stockItemID : stockItemIDs) {
             alleProducten.add(new Product(stockItemID));
@@ -41,7 +42,15 @@ public class First_Fit_Decreasing {
                 bins.add(nieuweBin);
             }
         }
-        return bins;
+        ArrayList<ArrayList<Integer>> BPP = new ArrayList<>();
+        for (Bin bin : bins) {
+            ArrayList<Integer> lijstInhoud = new ArrayList<>();
+            for (Product product : bin.producten) {
+                lijstInhoud.add(product.stockItemID);
+            }
+            BPP.add(lijstInhoud);
+        }
+        return BPP;
     }
 
     public static void printBins(ArrayList<Bin> bins){
