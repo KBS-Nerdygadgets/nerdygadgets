@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
+    Point nul = new Point(1, 5);
     public static void main(String[] args) {
 
+        
+        
         // Voorbeeld van de mogelijke punten in het magazijn
         Point[] pointsArray = {
 //                new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3), new Point(0, 4),
