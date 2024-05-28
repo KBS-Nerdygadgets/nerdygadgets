@@ -5,8 +5,8 @@ package TSP;
     Daarnaast wordt er gekeken of dit punt wel of niet bezocht is.
 */
 public class Point {
-    int x;
-    int y;
+    public int x;
+    public int y;
     boolean visited;
     public Point(int x, int y) {
         this.x = x;
