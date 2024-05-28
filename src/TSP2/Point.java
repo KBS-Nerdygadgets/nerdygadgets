@@ -14,4 +14,12 @@ public class Point {
         this.y = y;
         this.visited = false;
     }
+
+    public int getX(){
+        return x;
+    }
+
+    public int getY(){
+        return y;
+    }
 }

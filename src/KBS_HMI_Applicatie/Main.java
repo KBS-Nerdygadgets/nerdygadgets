@@ -3,14 +3,21 @@ package KBS_HMI_Applicatie;
 import com.fazecast.jSerialComm.SerialPort;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Scanner;
+
+import Database.Database;
 
 public class Main {
     public static void main(String[] args) {
         new GUIManager(new Dimension(1000, 800));
+
+        SerialComm();
+
+        
     }
 
-    void SerialComm(){
+    public static void SerialComm() {
         //Maak lijst met poorten
         SerialPort[] ports = SerialPort.getCommPorts();
 
@@ -70,5 +77,4 @@ public class Main {
         }
     }
 
-    
 }

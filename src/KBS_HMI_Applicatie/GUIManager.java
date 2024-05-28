@@ -8,6 +8,7 @@ public class GUIManager extends JFrame {
     private ControlPanel controlPanel;
     private StatusPanel statusPanel;
     private OrderPanel orderPanel;
+    
     public GUIManager(Dimension dimension){
         //De kleuren die in dit paneel gebruikt worden. Deze worden met de integratie van themas aangepast
         Color darkGray = new Color(51, 51, 51);
