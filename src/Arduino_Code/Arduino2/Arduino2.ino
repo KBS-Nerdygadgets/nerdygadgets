@@ -265,7 +265,7 @@ void noodstopReset() {
   unsigned long currentMillis = millis();                 // Haal de huidige tijd op
   bool microSchap = analogRead(msSchap);                  //Value van de sensor in var zetten
   bool noodStopReset = digitalRead(buttonNoodStopReset);  // status van de noodstop resetknop in een var zetten
-  
+     
   // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
   if (currentMillis - previousMillis1 >= interval1) {
     previousMillis1 = currentMillis;                      // Reset de timer
@@ -308,27 +308,33 @@ void stuurStatus(){
 unsigned long previousMillis3 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de sensor is uitgelezen
 const unsigned long interval3 = 300; // Interval van 200 milliseconden
 void setStatus(){
+  static bool vorigeKnopStatus = HIGH;  
   unsigned long currentMillis = millis(); // Haal de huidige tijd op
-  // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
-  if (currentMillis - previousMillis3 >= interval3) {
-    previousMillis3 = currentMillis; // Reset de timer
-    bool setStatusBool = digitalRead(buttonNoodStopReset);
+  bool setStatusBool = digitalRead(buttonNoodStopReset);  
+
+  if(setStatusBool == LOW && vorigeKnopStatus == HIGH){
+    // Controleer of er 100 milliseconden zijn verstreken sinds de laatste meting
+    if (currentMillis - previousMillis3 >= interval3) {
+      previousMillis3 = currentMillis; // Reset de timer
+
     
-    if(setStatusBool == LOW && huidigeModus != STOP){
-      switch (huidigeModus) {
-        case HANDMATIG:
-          huidigeModus = AUTOMATISCH;
-          updateLEDs();
-          break;
-        case AUTOMATISCH:
-          tweeNaarEen.setCharAt(0, 48); //Reset Automatische modus
-          productOpgepakt = false; //Reset Automatische modus
-          huidigeModus = HANDMATIG;
-          updateLEDs();
-          break;
+      if(setStatusBool == LOW && huidigeModus != STOP){
+        switch (huidigeModus) {
+          case HANDMATIG:
+            huidigeModus = AUTOMATISCH;
+            updateLEDs();
+            break;
+          case AUTOMATISCH:
+            tweeNaarEen.setCharAt(0, 48); //Reset Automatische modus
+            productOpgepakt = false; //Reset Automatische modus
+            huidigeModus = HANDMATIG;
+            updateLEDs();
+            break;
+        }
       }
     }
   }
+  vorigeKnopStatus = setStatusBool;
 }
 
 //* Handmatig Functies
