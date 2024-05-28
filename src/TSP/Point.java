@@ -13,4 +13,13 @@ public class Point {
         this.y = y;
         this.visited = false;
     }
+        // Getter for x
+        public int getX() {
+            return x;
+        }
+    
+        // Getter for y
+        public int getY() {
+            return y;
+        }
 }

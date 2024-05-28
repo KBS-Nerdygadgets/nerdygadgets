@@ -11,7 +11,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class OrderPanel extends JPanel{
-    private GUIThemes guiTheme;
     private Dimension screenDimension;
     private JPanel ordersPanel, buttonsPanel, managebuttonPanel, startbuttonPanel;
     private JComboBox<String> selectOrderBox;

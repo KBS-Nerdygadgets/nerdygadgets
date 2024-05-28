@@ -26,7 +26,7 @@ public class NearestNeighbor {
     }
 
     // Het Nearest Neighbor-algoritme
-    static List<Point> nearestNeighborAlgorithm(Point start, List<Point> points) {
+    public static List<Point> nearestNeighborAlgorithm(Point start, List<Point> points) {
         List<Point> path = new ArrayList<>();
         Point current = start;          // Het startpunt wordt gezet als het huidige punt
         current.visited = true;

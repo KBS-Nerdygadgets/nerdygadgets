@@ -18,7 +18,7 @@ public class Database {
         String query = "SELECT * FROM warehouse";
 
         try {
-            // Establish connection
+            // Connectie maken
             Connection connection = DriverManager.getConnection(url, username, password);
 
             // Create statement
@@ -27,13 +27,13 @@ public class Database {
             // Execute query
             ResultSet resultSet = statement.executeQuery(query);
 
-            // Process results
+            // Resultaten processen
             while (resultSet.next()) {
-                // Retrieve data from the result set
+                // Data ophalen van de set
                 int x = resultSet.getInt("X");
                 int y = resultSet.getInt("Y");
 
-                // Create a new Point object and add it to the list
+                // Nieuw Point aanmaken en toevoegen aan de lijst
                 Point point = new Point(x, y);
                 points.add(point);
             }
