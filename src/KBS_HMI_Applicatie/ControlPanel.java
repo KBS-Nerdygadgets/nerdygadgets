@@ -58,7 +58,7 @@ public class ControlPanel extends JPanel{
         topPanel.setPreferredSize(topPanelDimension);
 
         //Het label bovenaan het bovenste paneel wordt aangemaakt en aangepast
-        schapLabel = new JLabel("Schap");
+        schapLabel = new JLabel("Shelf");
         schapLabel.setForeground(foregroundColor);
         schapLabel.setFont(new Font(schapLabel.getFont().getName(), Font.PLAIN, 40));
         schapLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -81,7 +81,7 @@ public class ControlPanel extends JPanel{
         bottomPanelBottom.setPreferredSize(new Dimension(bottomPanelDimension.width, bottomPanelDimension.height/10*5));
 
         //Het legend label wordt aangemaakt
-        legendLabel = new JLabel("Legenda");
+        legendLabel = new JLabel("Legend");
         legendLabel.setForeground(foregroundColor);
         legendLabel.setFont(new Font(schapLabel.getFont().getName(), Font.PLAIN, bottomPanelLabelSize));
         legendLabel.setHorizontalAlignment(SwingConstants.CENTER);
