@@ -29,16 +29,16 @@ public class Database {
 
             // Resultaten processen
             while (resultSet.next()) {
-                // Data ophalen
+                // Data ophalen van de set
                 int x = resultSet.getInt("X");
                 int y = resultSet.getInt("Y");
 
-                // Nieuw punt aanmaken en toevoegen aan de lijst
+                // Nieuw Point aanmaken en toevoegen aan de lijst
                 Point point = new Point(x, y);
                 points.add(point);
             }
 
-            // Afsluiten
+            // Exit resources
             resultSet.close();
             statement.close();
             connection.close();

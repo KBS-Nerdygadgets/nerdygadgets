@@ -9,7 +9,6 @@ import TSP.NearestNeighbor;
 import java.util.List;
 
 public class ControlPanel extends JPanel{
-    GUIThemes guiTheme;
     private Dimension screenDimension;
     private GridPoint robotLocation;
     private JPanel topPanel, topPanelGrid, bottomPanelBottom, bottomPanelTop;
