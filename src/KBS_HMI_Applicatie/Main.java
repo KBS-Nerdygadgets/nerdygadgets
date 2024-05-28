@@ -8,7 +8,9 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         new GUIManager(new Dimension(1000, 800));
+    }
 
+    void SerialComm(){
         //Maak lijst met poorten
         SerialPort[] ports = SerialPort.getCommPorts();
 
@@ -67,4 +69,6 @@ public class Main {
             scanner.close();
         }
     }
+
+    
 }
