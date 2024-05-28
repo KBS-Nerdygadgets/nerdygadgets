@@ -13,6 +13,7 @@ public class ControlPanel extends JPanel{
     private GridPoint robotLocation;
     private JPanel topPanel, topPanelGrid, bottomPanelBottom, bottomPanelTop;
     private JLabel schapLabel, robotLocationLabel, unvisitedProductLabel, robotPathLabel, fetchedProductLabel, legendLabel;
+    private int text = 1;
     
     public ControlPanel(Dimension screenDimension){
 
@@ -122,8 +123,9 @@ public class ControlPanel extends JPanel{
                 //Als de x en y coördinaten overeenkomen met de x en y coördinaten van de robot, dan wordt de kleur van de label aangepast en de volgorde neergezet
                 for (TSP.Point p : path) {
                     if (x == p.y && y == p.x) {
-                        tempLabel.setText("P");
+                        tempLabel.setText(text+"");
                         tempLabel.setForeground(Color.GREEN);
+                        text++;
                     }
                 }
             }
