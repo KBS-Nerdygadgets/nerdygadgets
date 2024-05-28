@@ -8,6 +8,13 @@ import Database.Database;
 public class Main {
     Point nul = new Point(1, 5);
 
+    public static ArrayList<ArrayList<Integer>> TSPfuncties(ArrayList<ArrayList<Integer>> BPParray, int OrderID){
+        ArrayList<ArrayList<Integer>> locaties = Database.fetchLocations(BPParray, OrderID);
+        ArrayList<ArrayList<Point>> points2DArray = locatieOmzettenNaarPoints(locaties);
+        ArrayList<ArrayList<Point>> sorteerPoints2DArray = sorteren(points2DArray);
+        return pointsOmzettenNaarLocatie(sorteerPoints2DArray);
+    }
+
     public static ArrayList<ArrayList<Point>> locatieOmzettenNaarPoints(ArrayList<ArrayList<Integer>> locaties){
         ArrayList<ArrayList<Point>> locatiesNaarPoints = new ArrayList<>();
 
@@ -79,16 +86,4 @@ public class Main {
         }
         return points2DArray;
     }
-    public static void main(String[] args) {
-        ArrayList<ArrayList<Integer>> array = new ArrayList<>();
-        array.add(new ArrayList<>());
-        array.get(0).add(39);
-        array.get(0).add(184);
-        array.get(0).add(132);
-        array.get(0).add(9);
-        ArrayList<ArrayList<Integer>> locaties = Database.fetchLocations(array, 7);
-        ArrayList<ArrayList<Point>> points2DArray = locatieOmzettenNaarPoints(locaties);
-        ArrayList<ArrayList<Point>> sorteerPoints2DArray = sorteren(points2DArray);
-        pointsOmzettenNaarLocatie(sorteerPoints2DArray);
-    }   
 }
