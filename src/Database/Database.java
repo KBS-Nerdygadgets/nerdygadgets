@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import TSP.Point;
+import com.mysql.cj.x.protobuf.MysqlxCrud;
 
 public class Database {
     public static List<Point> fetchPointsFromDatabase() {
@@ -87,8 +88,8 @@ public class Database {
         return gewicht;
     }
 
-    public static List<Integer> fetchStockItemIDFromDatabase(int chosenOrderID) {
-        List<Integer> productIDs  = new ArrayList<>();
+    public static ArrayList<Integer> fetchStockItemIDFromDatabase(int chosenOrderID) {
+        ArrayList<Integer> productIDs  = new ArrayList<>();
 
         // JDBC Connection Parameters
         String url = "jdbc:mysql://localhost:3306/nerdygadgets";
@@ -125,4 +126,52 @@ public class Database {
 
         return productIDs;
     }
+
+    public static int[] fetchOrderIDsFromDatabase() {
+        List<Integer> orderIDsList = new ArrayList<>();
+
+        //connection adress and creds
+        String url = "jdbc:mysql://localhost:3306/nerdygadgets";
+        String username = "root";
+        String password = "";
+
+        //query
+        String query = "SELECT OrderID FROM warehouse ORDER BY OrderID DESC;";
+
+        try {
+            //create connection
+            Connection connection = DriverManager.getConnection(url, username, password);
+
+            //get statement
+            Statement statement = connection.createStatement();
+
+            //run query
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                int orderID = resultSet.getInt("OrderID");
+                orderIDsList.add(orderID);
+            }
+            resultSet.close();
+            statement.close();
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        //Chage list to array
+        int[] orderIDsArray = new int[orderIDsList.size()];
+        for (int i = 0; i < orderIDsList.size(); i++) {
+            orderIDsArray[i] = orderIDsList.get(i);
+        }
+
+        return orderIDsArray;
+    }
+
+//    public static void main(String[] args) {
+//        int[] orderIDs = fetchOrderIDsFromDatabase();
+//        for (int orderID : orderIDs) {
+//            System.out.println(orderID);
+//        }
+//    }
 }

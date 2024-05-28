@@ -90,6 +90,10 @@ public class OrderPanel extends JPanel{
                 StringBuilder orderText = new StringBuilder("Order: ");
                 for (int i = 0; i < selectedPointsBox.getItemCount(); i++) {
                     orderText.append(selectedPointsBox.getItemAt(i));
+                    System.out.println(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
+                    //binpacking
+                    First_Fit_Decreasing.firstFitDecreasing(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
+                    System.out.println(First_Fit_Decreasing.firstFitDecreasing(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i)))));
                     if (i < selectedPointsBox.getItemCount() - 1) {
                         orderText.append(", ");
                     }
@@ -178,15 +182,9 @@ public class OrderPanel extends JPanel{
     }
 
     private void populateComboBox() {
-        // Fetch points using the TSP.Main class
-        List<Point> points = Main.fetchPoints();
-        // Remove the first point (start point) if needed
-        if (!points.isEmpty()) {
-            points.remove(0);
-        }
-        // Convert points to string and add to combobox
-        for (Point p : points) {
-            selectOrderBox.addItem("(" + p.x + ", " + p.y + ")");
+        int[] orderIDs = Database.fetchOrderIDsFromDatabase();
+        for (int orderID : orderIDs) {
+            selectOrderBox.addItem(Integer.toString(orderID));
         }
     }
 }
