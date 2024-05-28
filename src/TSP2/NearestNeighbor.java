@@ -1,4 +1,4 @@
-package TSP;
+package TSP2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ public class NearestNeighbor {
     }
 
     // Het Nearest Neighbor-algoritme
-    public static List<Point> nearestNeighborAlgorithm(Point start, List<Point> points) {
+    static List<Point> nearestNeighborAlgorithm(Point start, List<Point> points) {
         List<Point> path = new ArrayList<>();
         Point current = start;          // Het startpunt wordt gezet als het huidige punt
         current.visited = true;

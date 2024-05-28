@@ -6,7 +6,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class StatusPanel extends JPanel{
-    private GUIThemes guiTheme;
     private Dimension screenDimension;
     private JPanel statusPanel, logsPanel, statusLabelPanel, statusPanelLabel, statusLights;
     private JLabel statusLabel, status, stoplicht;
