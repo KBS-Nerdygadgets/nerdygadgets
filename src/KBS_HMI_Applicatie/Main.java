@@ -13,8 +13,6 @@ public class Main {
         new GUIManager(new Dimension(1000, 800));
 
         SerialComm();
-
-        
     }
 
     public static void SerialComm() {

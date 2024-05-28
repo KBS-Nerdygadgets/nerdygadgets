@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import TSP.Main;
 import TSP.Point;
@@ -89,11 +90,14 @@ public class OrderPanel extends JPanel{
                 // Verplaats de geselecteerde items naar orderLabel
                 StringBuilder orderText = new StringBuilder("Order: ");
                 for (int i = 0; i < selectedPointsBox.getItemCount(); i++) {
+                    int OrderID = Integer.valueOf(selectedPointsBox.getItemAt(i));
                     orderText.append(selectedPointsBox.getItemAt(i));
                     //System.out.println(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
                     //binpacking
-                    First_Fit_Decreasing.firstFitDecreasing(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
-                    //System.out.println(First_Fit_Decreasing.firstFitDecreasing(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i)))));
+                    ArrayList<ArrayList<Integer>> BPParray = First_Fit_Decreasing.firstFitDecreasing(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
+                    System.out.println(BPParray);
+                    ArrayList<ArrayList<Integer>> BPPenTSParray = TSP.Main.TSPfuncties(BPParray, OrderID);
+                    System.out.println(BPPenTSParray);
                     if (i < selectedPointsBox.getItemCount() - 1) {
                         orderText.append(", ");
                     }
