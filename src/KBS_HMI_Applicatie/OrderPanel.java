@@ -90,10 +90,10 @@ public class OrderPanel extends JPanel{
                 StringBuilder orderText = new StringBuilder("Order: ");
                 for (int i = 0; i < selectedPointsBox.getItemCount(); i++) {
                     orderText.append(selectedPointsBox.getItemAt(i));
-                    System.out.println(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
+                    //System.out.println(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
                     //binpacking
                     First_Fit_Decreasing.firstFitDecreasing(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
-                    System.out.println(First_Fit_Decreasing.firstFitDecreasing(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i)))));
+                    //System.out.println(First_Fit_Decreasing.firstFitDecreasing(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i)))));
                     if (i < selectedPointsBox.getItemCount() - 1) {
                         orderText.append(", ");
                     }
