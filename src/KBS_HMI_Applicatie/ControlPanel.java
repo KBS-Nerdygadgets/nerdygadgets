@@ -127,10 +127,10 @@ public class ControlPanel extends JPanel{
                     }
                 }
 
-                if (x == 1 && y == 1) {
-                    tempLabel.setForeground(Color.CYAN);
-                    tempLabel.setText("L");
-                }
+                // if (x == 1 && y == 1) {
+                //     tempLabel.setForeground(Color.CYAN);
+                //     tempLabel.setText("L");
+                // }
             }
         }
 
