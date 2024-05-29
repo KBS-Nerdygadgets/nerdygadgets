@@ -5,16 +5,12 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
-import TSP.Main;
-import TSP.Point;
 import Database.Database;
 import Bin_Packing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class OrderPanel extends JPanel{
-    private Dimension screenDimension;
     private JPanel ordersPanel, buttonsPanel, managebuttonPanel, startbuttonPanel;
     private JComboBox<String> selectOrderBox;
     private JButton startOrderButton;//, selectOrderBox;
@@ -24,7 +20,6 @@ public class OrderPanel extends JPanel{
 
 
     public OrderPanel(Dimension screenDimension){
-        this.screenDimension = screenDimension;
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast
         Color darkGray = new Color(51, 51, 51);
         Color background = new Color(35, 35, 35);
@@ -98,6 +93,7 @@ public class OrderPanel extends JPanel{
                     System.out.println(BPParray);
                     ArrayList<ArrayList<Integer>> BPPenTSParray = TSP.Main.TSPfuncties(BPParray, OrderID);
                     System.out.println(BPPenTSParray);
+                    System.out.println("");
                     if (i < selectedPointsBox.getItemCount() - 1) {
                         orderText.append(", ");
                     }
@@ -167,8 +163,6 @@ public class OrderPanel extends JPanel{
                 }
             }
         });
-
-
 
         //Alles wordt toegevoegd in de panelen
         add(orders, BorderLayout.NORTH);

@@ -4,7 +4,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import TSP.Point;
-import com.mysql.cj.x.protobuf.MysqlxCrud;
 
 public class Database {
     public static List<Point> fetchPointsFromDatabase() {
@@ -207,11 +206,4 @@ public class Database {
         System.out.println("TSP: Locaties opgehaald");
         return locations;
     }
-
-//    public static void main(String[] args) {
-//        int[] orderIDs = fetchOrderIDsFromDatabase();
-//        for (int orderID : orderIDs) {
-//            System.out.println(orderID);
-//        }
-//    }
 }
