@@ -53,7 +53,7 @@ String input = "";
 
 //Automatische modus variabelen
 bool YomhoogOmOpTePakken = false;
-bool productOpgepakt = false;
+bool productOpgepakt = true;
 
 String eenNaarTwee = "000";
 
@@ -89,6 +89,9 @@ const int coordinaten[25][2] = {
   {2436, 2154},  //1:4
   {3141, 2154}   //1:5
 };
+
+
+
 
 //Uiteinde sensoren variablen
 bool drukSwitchBoven = false;
@@ -150,14 +153,17 @@ void loop() {
       //functies noodstop
       break;
     case AUTOMATISCH:
-      if(!productOpgepakt){
-        automatischeFuncties(12);
-      }
-      else{
-        Serial.println("Product is succesvol opgepakt");
-      }
+      // if(!productOpgepakt){
+      //   automatischeFuncties(12); // var van maken
+      // }
+      // else{
+      //   Serial.println("Product is succesvol opgepakt");
+      // }
+      arrayTest();
+
       break;
   }
+  
   serialRead();
   // Serial.print(Xencoder);
   // Serial.print("              ");
@@ -204,7 +210,7 @@ void setStatus() {
     XasAangekomen = false; //reset variabelen voor auto modus
     YasAangekomen = false; //reset variabelen voor auto modus
     YomhoogOmOpTePakken = false; //reset variabele voor auto modus
-    productOpgepakt = false;
+    //productOpgepakt = false;
   }
 
   if (status == 2) {
@@ -513,3 +519,58 @@ void leesInductiveSensoren(){
     }
   }
 }
+
+//*Testfuncties
+// hier ook if opgepakt, en rit var bepalen voor naar doos te gaan
+void verwerkLocaties(int** array, int rows, int* cols ) { //multidimensionaalArray
+//Serial.println("Test functie in");
+  if(productOpgepakt == true){
+    //Serial.println("Test loop in"); //test
+    for (int i = 0; i < rows; ++i) { //(i = 0; i < multidimensionaalArray.getLength; i++)
+      if(productOpgepakt == true){
+        for (int j = 0; j < cols[i] && productOpgepakt == true; ++j) { //(j = 0; j < multidimensionaalArray[i][]; j++)
+          
+          automatischeFuncties(array[i][j]); //(multidimensionaalArray[i][j])
+          //Serial.println("Test loop2 in"); //test
+          productOpgepakt = false;
+          
+        }
+      }
+    }
+  }
+  //productOpgepakt = true;
+}
+
+void arrayTest(){
+  // Array testen
+  // grootte van array defineren
+  int rows = 2;
+  int* cols = new int[rows]; // Array om aantal kolommen per rij op te slaan
+  cols[0] = 2; // Aantal kolommen 1e rij
+  cols[1] = 2; // Aantal kolommen 2e rij
+
+  // Dynamisch array allocaten
+  int** coordinated = new int*[rows];
+  for(int i = 0; i > rows; ++i){
+    coordinated[i] = new int[cols[i]];
+  }
+
+  // Initieer de array
+  coordinated[0][0] = 0;
+  coordinated[0][1] = 5;
+  coordinated[1][0] = 20;
+  coordinated[1][1] = 15;
+
+  // Array leeg halen
+  for(int i = 0; i < rows; ++i){
+    delete[] coordinated[i];
+  }
+  delete[] coordinated;
+  delete[] cols;
+
+  // Functie oproepen met dysnamische array
+  verwerkLocaties(coordinated,rows, cols);  
+  //automatischeFuncties(i);
+}
+
+
