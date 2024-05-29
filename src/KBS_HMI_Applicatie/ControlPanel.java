@@ -17,7 +17,7 @@ public class ControlPanel extends JPanel{
     
     public ControlPanel(Dimension screenDimension){
 
-                        // Punten halen van de database
+                // Punten halen van de database
                 List<TSP.Point> points = Database.fetchPointsFromDatabase();
         
                 // Als er geen punten zijn, stoppen
