@@ -124,7 +124,6 @@ public class ControlPanel extends JPanel{
                     if (x == p.getY() && y == p.getX()) {
                         tempLabel.setText(Database.fetchOrderIDFromDatabase(p)+"");
                         tempLabel.setForeground(Color.RED);
-                        System.out.println(Database.fetchOrderIDFromDatabase(p));
                     }
                 }
             }
