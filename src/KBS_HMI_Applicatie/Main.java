@@ -3,10 +3,8 @@ package KBS_HMI_Applicatie;
 import com.fazecast.jSerialComm.SerialPort;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Scanner;
 
-import Database.Database;
 
 public class Main {
     public static void main(String[] args) {
@@ -54,6 +52,7 @@ public class Main {
             System.out.println("Serial port succesvol geopend.");
         } else {
             System.out.println("Error, kon poort niet openen.");
+            scanner.close();
             return;
         }
 

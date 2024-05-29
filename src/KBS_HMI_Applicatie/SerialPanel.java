@@ -1,28 +1,23 @@
 package KBS_HMI_Applicatie;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 public class SerialPanel extends JPanel{
-    private Dimension screenDimension;
     private JLabel rX, tX, rood, groen;
     private JButton connectionButton, settingsButton;
     private JComboBox<String> startButton;
     private JPanel serialStatus;
     
     public SerialPanel(Dimension screenDimension){
-        this.screenDimension = screenDimension;
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast
         Color background = new Color(42, 42, 42);
         Color buttonColor = new Color(73, 73, 73);
         Color buttonForegroundColor = new Color(200, 200, 200);
         Color foregroundColor = new Color(204, 204, 204);
-        Color gridForeground = new Color(78, 78, 78);
         //De dimensions en borders die gebruikt worden
         Dimension buttonDimensions = new Dimension(125, 30);
         Dimension settingsButtonDimensions = new Dimension(30, 30);
-        Border gridBorder = BorderFactory.createLineBorder(gridForeground);
 
         //Past het serial connection manager paneel aan
         setBackground(background);
