@@ -103,6 +103,7 @@ public class OrderPanel extends JPanel{
                         JavaToArduino += "|";
                     }
                     System.out.println(JavaToArduino);
+                    GUIManager.scmPanel.sendToSelectedPort(JavaToArduino);
                     System.out.println("");
                     if (i < selectedPointsBox.getItemCount() - 1) {
                         orderText.append(", ");

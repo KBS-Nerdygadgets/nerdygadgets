@@ -10,7 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-public class SerialPanel extends JPanel{
+public class SerialPanel extends JPanel {
     private JLabel rX, tX, rood, groen, rood1, groen1;
     private JButton connectionButton, settingsButton;
     private JComboBox<String> startButton;
@@ -19,8 +19,9 @@ public class SerialPanel extends JPanel{
     public SerialPort selectedPort;
     private boolean connected;
     private Icon redIcon, greenIcon;
-    
-    public SerialPanel(Dimension screenDimension){
+
+
+    public SerialPanel(Dimension screenDimension) {
         SerialComm();
         connected = false;
 
@@ -29,7 +30,7 @@ public class SerialPanel extends JPanel{
         Color buttonColor = new Color(73, 73, 73);
         Color buttonForegroundColor = new Color(200, 200, 200);
         Color foregroundColor = new Color(204, 204, 204);
-        
+
         // De gebruikte dimensies
         Dimension buttonDimensions = new Dimension(125, 30);
         Dimension settingsButtonDimensions = new Dimension(30, 30);
@@ -59,7 +60,7 @@ public class SerialPanel extends JPanel{
         // COM ports toevoegen aan combobox
         for (SerialPort port : portsList) {
             String tempPort = port.getDescriptivePortName();
-            startButton.addItem(tempPort.substring(tempPort.length()-5, tempPort.length()-1));
+            startButton.addItem(tempPort.substring(tempPort.length() - 5, tempPort.length() - 1));
         }
 
         // Connect button aanmaken
@@ -143,7 +144,7 @@ public class SerialPanel extends JPanel{
             return;
         }
 
-        selectedPort = portsList.get(selectedIndex);
+        SerialPort selectedPort = portsList.get(selectedIndex);
 
         // Open poort
         if (selectedPort.openPort()) {
@@ -165,8 +166,39 @@ public class SerialPanel extends JPanel{
         // Set baud rate
         selectedPort.setBaudRate(9600);
 
-        //TODO verdere communicatie hier
+        // Poort sluiten wanneer klaar
+        selectedPort.closePort();
+    }
+    public void sendToSelectedPort(String dataToSend) {
+        int selectedIndex = startButton.getSelectedIndex();
+        if (selectedIndex == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a port.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
+        SerialPort selectedPort = portsList.get(selectedIndex);
+
+        // Open poort
+        if (selectedPort.openPort()) {
+            System.out.println("Serial port successfully opened.");
+            connected = true;
+            // Verander iconen naar groen
+            rood.setIcon(greenIcon);
+            rood1.setIcon(greenIcon);
+        } else {
+            System.out.println("Error, could not open port.");
+            JOptionPane.showMessageDialog(this, "Failed to open port " + selectedPort.getDescriptivePortName(), "Error", JOptionPane.ERROR_MESSAGE);
+            connected = false;
+            // Verander iconen naar rood
+            rood.setIcon(redIcon);
+            rood1.setIcon(redIcon);
+            return;
+        }
+
+        // Set baud rate
+        selectedPort.setBaudRate(9600);
+        selectedPort.writeBytes(dataToSend.getBytes(), dataToSend.getBytes().length);
+        System.out.println("Serial port successfully sent.");
         // Poort sluiten wanneer klaar
         selectedPort.closePort();
     }
