@@ -6,7 +6,7 @@ import java.util.List;
 import TSP.Point;
 import com.mysql.cj.x.protobuf.MysqlxCrud;
 
-public class Database {
+public class Database {    
     public static List<Point> fetchPointsFromDatabase() {
         List<Point> points = new ArrayList<>();
 
@@ -208,10 +208,37 @@ public class Database {
         return locations;
     }
 
-//    public static void main(String[] args) {
-//        int[] orderIDs = fetchOrderIDsFromDatabase();
-//        for (int orderID : orderIDs) {
-//            System.out.println(orderID);
-//        }
-//    }
+    public static int fetchOrderIDFromDatabase(Point point) {
+        // JDBC Connection Parameters
+        String url = "jdbc:mysql://localhost:3306/nerdygadgets";
+        String username = "root";
+        String password = "";
+
+        // orderID naar -1 zetten voor als er geen order gevonden wordt
+        int orderID = -1;
+
+        // SQL query
+        String query = "SELECT OrderID FROM warehouse WHERE X = ? AND Y = ?";
+
+        // Connectie maken
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            
+            // Parameters toevoegen
+            preparedStatement.setInt(1, point.getX());
+            preparedStatement.setInt(2, point.getY());
+
+            // Query uitvoeren
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    orderID = resultSet.getInt("OrderID");
+                }
+            }
+            // Exit resources
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        // Return orderID
+        return orderID;
+    }
 }

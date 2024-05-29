@@ -6,6 +6,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import Database.Database;
 import TSP.NearestNeighbor;
+import TSP.Point;
+
 import java.util.List;
 
 public class ControlPanel extends JPanel{
@@ -31,6 +33,8 @@ public class ControlPanel extends JPanel{
         
                 // De Nearest Neighbour Algorithm toepassen
                 List<TSP.Point> path = NearestNeighbor.nearestNeighborAlgorithm(start, points);
+
+                int[] orderIDs = Database.fetchOrderIDsFromDatabase();
 
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast
         Color darkGray = new Color(51, 51, 51);
@@ -123,8 +127,9 @@ public class ControlPanel extends JPanel{
                 //Als de x en y coördinaten overeenkomen met de x en y coördinaten van de robot, dan wordt de kleur van de label aangepast en de volgorde neergezet
                 for (TSP.Point p : path) {
                     if (x == p.getY() && y == p.getX()) {
-                        tempLabel.setText("U.P.");
+                        tempLabel.setText(Database.fetchOrderIDFromDatabase(p)+"");
                         tempLabel.setForeground(Color.RED);
+                        System.out.println(Database.fetchOrderIDFromDatabase(p));
                     }
                 }
             }
