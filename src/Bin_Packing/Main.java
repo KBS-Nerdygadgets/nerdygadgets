@@ -1,8 +1,6 @@
 package Bin_Packing;
 
-import Database.Database;
 
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 
 public class Main {

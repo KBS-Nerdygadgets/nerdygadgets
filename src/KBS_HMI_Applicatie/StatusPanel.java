@@ -6,14 +6,12 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class StatusPanel extends JPanel{
-    private Dimension screenDimension;
     private JPanel statusPanel, logsPanel, statusLabelPanel, statusPanelLabel, statusLights;
     private JLabel statusLabel, status, stoplicht;
     private JLabel logs;
     private JTextField statussen;
 
     public StatusPanel(Dimension screenDimension){
-        this.screenDimension = screenDimension;
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast
         Color darkGray = new Color(51, 51, 51);
         Color background = new Color(35, 35, 35);

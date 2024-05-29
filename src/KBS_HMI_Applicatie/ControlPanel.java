@@ -9,11 +9,8 @@ import TSP.NearestNeighbor;
 import java.util.List;
 
 public class ControlPanel extends JPanel{
-    private Dimension screenDimension;
-    private GridPoint robotLocation;
     private JPanel topPanel, topPanelGrid, bottomPanelBottom, bottomPanelTop;
     private JLabel schapLabel, robotLocationLabel, unvisitedProductLabel, robotPathLabel, fetchedProductLabel, legendLabel;
-    private int text = 1;
     
     public ControlPanel(Dimension screenDimension){
 
@@ -35,7 +32,6 @@ public class ControlPanel extends JPanel{
         //De kleuren die in dit Paneel gebruikt worden. Deze worden met de integratie van Themas aangepast
         Color darkGray = new Color(51, 51, 51);
         Color background = new Color(35, 35, 35);
-        Color borderColor = new Color(58, 58, 58);
         Color gridForeground = new Color(78, 78, 78);
         Color foregroundColor = new Color(204, 204, 204);
         //De borders die gebruikt worden
@@ -46,7 +42,6 @@ public class ControlPanel extends JPanel{
         int bottomPanelLabelSize = 20;
 
         //Past het control paneel aan
-        this.screenDimension = screenDimension;
         setBackground(darkGray);
         setLayout(new BorderLayout());
         setPreferredSize(screenDimension);

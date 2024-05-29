@@ -52,6 +52,7 @@ public class GUIManager extends JFrame {
 
         setVisible(true);
     }
+    
     public SerialPanel getSerialConnectionManager(){
         return scmPanel;
     }
