@@ -7,6 +7,8 @@ import java.awt.*;
 import java.util.ArrayList;
 import Database.Database;
 import Bin_Packing.*;
+import TSP.Point;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -89,14 +91,13 @@ public class OrderPanel extends JPanel{
                     orderText.append(selectedPointsBox.getItemAt(i));
                     //System.out.println(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
                     //binpacking
-                    ArrayList<ArrayList<Integer>> BPParray = First_Fit_Decreasing.firstFitDecreasing(Database.fetchStockItemIDFromDatabase(Integer.valueOf(selectedPointsBox.getItemAt(i))));
-                    System.out.println(BPParray);
-                    ArrayList<ArrayList<Integer>> BPPenTSParray = TSP.Main.TSPfuncties(BPParray, OrderID);
-                    System.out.println(BPPenTSParray);
-                    System.out.println("");
+                    sendArraytoArduino(OrderID);
+
+                    //Combobox
                     if (i < selectedPointsBox.getItemCount() - 1) {
                         orderText.append(", ");
                     }
+                    
                 }
                 orderLabel.setText(orderText.toString());
                 // Wis de selectie in selectedPointsBox
@@ -184,5 +185,22 @@ public class OrderPanel extends JPanel{
         for (int orderID : orderIDs) {
             selectOrderBox.addItem(Integer.toString(orderID));
         }
+    }
+
+    private void sendArraytoArduino(int OrderID){
+        ArrayList<Integer> stockItemIDs = Database.fetchStockItemIDFromDatabase(OrderID);
+        ArrayList<ArrayList<Integer>> BPParray = First_Fit_Decreasing.firstFitDecreasing(stockItemIDs);
+        System.out.println(BPParray);
+        ArrayList<ArrayList<Integer>> BPPenTSParray = TSP.Main.TSPfuncties(BPParray, OrderID);
+        System.out.println(BPPenTSParray);
+        System.out.println("");
+        String JavaToArduino = "";
+        for(int rit = 0; rit < BPPenTSParray.size(); rit++){
+            for(int locatie = 0; locatie < BPPenTSParray.get(rit).size(); locatie++){
+                JavaToArduino += BPPenTSParray.get(rit).get(locatie) + ",";
+            }
+            JavaToArduino += "|";
+        }
+        System.out.println(JavaToArduino);
     }
 }

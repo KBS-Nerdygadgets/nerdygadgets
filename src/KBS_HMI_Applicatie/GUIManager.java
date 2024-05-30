@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class GUIManager extends JFrame {
-    private SerialPanel scmPanel;
+    public static SerialPanel scmPanel;
     private ControlPanel controlPanel;
     private StatusPanel statusPanel;
     private OrderPanel orderPanel;

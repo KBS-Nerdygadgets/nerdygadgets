@@ -50,6 +50,7 @@ public class First_Fit_Decreasing {
             }
             BPP.add(lijstInhoud);
         }
+        System.out.println("BPP: itemID's verdeeld over ritten");
         return BPP;
     }
 

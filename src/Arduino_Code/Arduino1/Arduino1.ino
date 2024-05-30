@@ -73,7 +73,7 @@ const int coordinaten[25][2] = {
 
   {169, 1119},   //3:1
   {925, 1119},   //3:2
-  {1600, 1119},  //3:3
+  {1721, 1119},  //3:3
   {2436, 1119},  //3:4
   {3141, 1119},  //3:5
 
@@ -254,13 +254,6 @@ void moveY(Richting richting, int snelheid){
     else if(richting == Boven){
       digitalWrite(dirB, LOW);
     }
-  }
-}
-
-void gaNaarDoos(){
-  leesInductiveSensoren();
-  if(metaalRechts == false){
-    moveX(Rechts, snelheid);
   }
 }
 
