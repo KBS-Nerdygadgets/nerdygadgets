@@ -3,11 +3,15 @@ package KBS_HMI_Applicatie;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+
+import Bin_Packing.First_Fit_Decreasing;
+
 import java.awt.*;
 import Database.Database;
 import TSP.NearestNeighbor;
 import TSP.Point;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ControlPanel extends JPanel{
@@ -122,9 +126,13 @@ public class ControlPanel extends JPanel{
                 //Als de x en y coördinaten overeenkomen met de x en y coördinaten van de robot, dan wordt de kleur van de label aangepast en de volgorde neergezet
                 for (TSP.Point p : path) {
                     if (x == p.getY() && y == p.getX()) {
+
                         tempLabel.setText(Database.fetchOrderIDFromDatabase(p)+"");
-                        tempLabel.setForeground(Color.RED);
-                        System.out.println(Database.fetchOrderIDFromDatabase(p));
+                        if (Database.fetchOrderIDFromDatabase(p) == 7) {
+                            tempLabel.setForeground(Color.GREEN);
+                        } else {    
+                            tempLabel.setForeground(Color.RED);
+                        }
                     }
                 }
             }
