@@ -390,6 +390,7 @@ void leesDistanceSensorZ(){
       
     //De Z as staat helemaal naar binnen
     if(volts >= 640){
+      tweeNaarEen.setCharAt(0, 48); //seriële communicatie Z-as 0
       uitgeschoven = false;
     }
     else if (volts < 330){
@@ -401,6 +402,7 @@ void leesDistanceSensorZ(){
 
     //De Z as staat helemaal naar buiten
     if (volts < 640){
+      tweeNaarEen.setCharAt(0, 49); //seriële communicatie Z-as 1
       uitgeschoven = true;
     } 
   }

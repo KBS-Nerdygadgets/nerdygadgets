@@ -99,9 +99,6 @@ bool metaalRechts = false;
 //Noodsstop
 bool noodStop = false;
 
-//Z-as
-bool uitgeschoven = false;
-
 //*Setup
 void setup() {
   delay(1200);
@@ -215,21 +212,23 @@ void setStatus() {
 //richting true voor links, false voor rechts
 void moveX(Richting richting, int snelheid){
   //rechts
-  if(richting == Rechts && metaalRechts == 1){
-    analogWrite(pwmA, 0);
-  }
-  //links
-  else if(richting == Links && metaalLinks == 1){
-    analogWrite(pwmA, 0);
-  }
-  else{
-    analogWrite(pwmA, snelheid);
-    if(richting == Rechts){
-      digitalWrite(dirA, HIGH);
+  if(ZasUitgeschoven == 0){
+    if(richting == Rechts && metaalRechts == 1){
+      analogWrite(pwmA, 0);
     }
-    if(richting == Links){
-      digitalWrite(dirA, LOW);
+    //links
+    else if(richting == Links && metaalLinks == 1){
+      analogWrite(pwmA, 0);
     }
+    else{
+      analogWrite(pwmA, snelheid);
+      if(richting == Rechts){
+        digitalWrite(dirA, HIGH);
+      }
+      if(richting == Links){
+        digitalWrite(dirA, LOW);
+      }
+    }    
   }
 }
 
@@ -257,6 +256,8 @@ void moveY(Richting richting, int snelheid){
   }
 }
 
+//De robot beweegt naar de rechter metaalsensor
+//Met de rechter metaalsensor detecteren dat de robor naar de doos is gegaan
 void gaNaarDoos(){
   leesInductiveSensoren();
   if(metaalRechts == false){
@@ -356,14 +357,16 @@ void leesJoystick() {
 //kies een richting op basis van joystick input
 void geefRichting() {
   richting = "";
-  // Joystick naar rechts
-  if (xValue > 700) {
-    richting += "1";
-  }
+  if(ZasUitgeschoven == 0){
+    // Joystick naar rechts
+    if (xValue > 700) {
+      richting += "1";
+    }
 
-  // Joystick naar links
-  if (xValue < 300) {
-    richting += "2";
+    // Joystick naar links
+    if (xValue < 300) {
+      richting += "2";
+    }    
   }
 
   // Joystick naar boven
