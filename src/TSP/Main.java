@@ -6,8 +6,10 @@ import java.util.List;
 import Database.Database;
 
 public class Main {
+    //Het nulpunt van de robot, dit moet het punt waar de robot begint worden
     Point nul = new Point(1, 5);
 
+    //Collectie van functies voor het TSP proces
     public static ArrayList<ArrayList<Integer>> TSPfuncties(ArrayList<ArrayList<Integer>> BPParray, int OrderID){
         ArrayList<ArrayList<Integer>> locaties = Database.fetchLocations(BPParray, OrderID);
         System.out.println(locaties);
@@ -16,6 +18,7 @@ public class Main {
         return pointsOmzettenNaarLocatie(sorteerPoints2DArray);
     }
 
+    //De locatie in het 2D array worden omgezet naar punten
     public static ArrayList<ArrayList<Point>> locatieOmzettenNaarPoints(ArrayList<ArrayList<Integer>> locaties){
         ArrayList<ArrayList<Point>> locatiesNaarPoints = new ArrayList<>();
 
@@ -39,6 +42,7 @@ public class Main {
         return locatiesNaarPoints;
     }
     
+    //De punten worden terug omgezet naar locaties
     public static ArrayList<ArrayList<Integer>> pointsOmzettenNaarLocatie(ArrayList<ArrayList<Point>> points){
         ArrayList<ArrayList<Integer>> locaties = new ArrayList<>();
 
@@ -62,6 +66,7 @@ public class Main {
         return locaties;
     }
 
+    //De points worden gesorteerd door het algoritme
     public static ArrayList<ArrayList<Point>> sorteren(ArrayList<ArrayList<Point>> points2DArray){
         //Elke rit moet gesorteerd worden
         for(int rit = 0; rit < points2DArray.size(); rit++){
