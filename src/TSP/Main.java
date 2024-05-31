@@ -63,6 +63,7 @@ public class Main {
     }
 
     public static ArrayList<ArrayList<Point>> sorteren(ArrayList<ArrayList<Point>> points2DArray){
+        //Elke rit moet gesorteerd worden
         for(int rit = 0; rit < points2DArray.size(); rit++){
             ArrayList<Point> pointsArray = points2DArray.get(rit);
             // Hier wordt de nieuwe array 'points' aangemaakt.
@@ -81,7 +82,6 @@ public class Main {
             for(int i = 0; i < path.size(); i++){
                 path.get(i);
                 points2DArray.get(rit).set(i, path.get(i));
-
             }
         }
         System.out.println("TSP: Points gesorteerd");
