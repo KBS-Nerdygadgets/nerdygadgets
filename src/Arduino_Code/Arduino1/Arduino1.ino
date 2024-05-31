@@ -55,6 +55,7 @@ String input = "";
 bool YomhoogOmOpTePakken = false;
 bool productOpgepakt = false;
 
+//string wordt gestuurd naar Arduino 2
 String eenNaarTwee = "000";
 
 //Encoder waardes van de coordinaten
@@ -129,6 +130,7 @@ void setup() {
   //Interrupt voor encoder
   attachInterrupt(digitalPinToInterrupt(XencoderPin), XleesEncoder, RISING);
 
+  //Setup communicatie met Arduino 2
   Wire.begin(slaveAddress1);
   Wire.onReceive(serialRead);
   Wire.onRequest(serialWrite);
@@ -137,17 +139,14 @@ void setup() {
 
 //*Loop
 void loop() {
-  functiesSensoren();
+  //Robot doorloopt case afhankelijk van de status waarin hij zich bevind
   switch(huidigeModus){
     case HANDMATIG:
-      // Serial.println("Handmatig");
       handmatigeStatus();
       break;
     case STOP:
-      // Serial.println("Noodstop");
       analogWrite(pwmA, 0);
       analogWrite(pwmB, 0);
-      //functies noodstop
       break;
     case AUTOMATISCH:
       if(!productOpgepakt){
@@ -159,11 +158,7 @@ void loop() {
       break;
   }
   serialRead();
-  // Serial.print(Xencoder);
-  // Serial.print("              ");
-  // Serial.print(Yencoder);
-  // Serial.print("              ");
-  // Serial.println(input);
+  functiesSensoren();
 }
 
 //*Functies voor communicatie tussen Arduinos
@@ -175,9 +170,11 @@ void serialRead() {
     char c = Wire.read();
     input += c;
   }
+  //zet de string om in de nodige waardes
   leesString();
 }
 
+//Struur bericht naar Arduino 2
 void serialWrite(){
   Wire.write(eenNaarTwee.c_str());
 }
@@ -187,11 +184,12 @@ void leesString() {
   ZasUitgeschoven = input.substring(0,1).toInt();
   Yencoder = input.substring(1, 5).toInt();
   status = input.substring(5, 6).toInt();
+  //Nadat status is gelezen moet de status aangepast worden als het nodig is
   setStatus();
 }
 
 //*Functies voor statussen
-//Set de status op basis van input van Arduino 2
+//Set de status
 void setStatus() {
   if (status == 0) {
     huidigeModus = STOP;
@@ -199,11 +197,13 @@ void setStatus() {
 
   if (status == 1) {
     huidigeModus= HANDMATIG;
-    eenNaarTwee.setCharAt(0, 48); //reset communicatie voor auto modus
-    eenNaarTwee.setCharAt(1, 48); //reset communicatie voor auto modus
-    XasAangekomen = false; //reset variabelen voor auto modus
-    YasAangekomen = false; //reset variabelen voor auto modus
-    YomhoogOmOpTePakken = false; //reset variabele voor auto modus
+
+    //Variabelen en communicatie van automatische mode moet gereset worden
+    eenNaarTwee.setCharAt(0, 48);
+    eenNaarTwee.setCharAt(1, 48);
+    XasAangekomen = false;
+    YasAangekomen = false;
+    YomhoogOmOpTePakken = false;
     productOpgepakt = false;
   }
 
@@ -212,45 +212,47 @@ void setStatus() {
   }
 }
 
-//richting true voor links, false voor rechts
+//Bewegen X as, inclusief beveiliging
 void moveX(Richting richting, int snelheid){
-  //rechts
   if(richting == Rechts && metaalRechts == 1){
     analogWrite(pwmA, 0);
   }
-  //links
   else if(richting == Links && metaalLinks == 1){
     analogWrite(pwmA, 0);
   }
   else{
     analogWrite(pwmA, snelheid);
+    //rechts
     if(richting == Rechts){
       digitalWrite(dirA, HIGH);
     }
+    //links
     if(richting == Links){
       digitalWrite(dirA, LOW);
     }
   }
 }
 
-//richting true voor boven, false voor beneden
+//Bewegen Y as, inclusief beveiliging
 void moveY(Richting richting, int snelheid){
   analogWrite(brakeB, 0);
-  //boven
+    //als drukswitches zijn geactiveerd, geen beweging
   if(richting == Boven && drukSwitchBoven == 1){
-    analogWrite(brakeB, 1);
+    analogWrite(brakeB, 1);  //!Werkte niet
     analogWrite(pwmB, 0);
   }
-  //beneden
+  //als drukswitches zijn geactiveerd, geen beweging
   else if(richting == Beneden && drukSwitchBeneden == 1){
-    analogWrite(brakeB, 1);
+    analogWrite(brakeB, 1); //!Werkte niet
     analogWrite(pwmB, 0);
   }
   else{
     analogWrite(pwmB, snelheid);
+    //beneden
     if(richting == Beneden){
       digitalWrite(dirB, HIGH);
     }
+    //boven
     else if(richting == Boven){
       digitalWrite(dirB, LOW);
     }
@@ -258,6 +260,18 @@ void moveY(Richting richting, int snelheid){
 }
 
 //*Automatische functies
+//collectie van automatische functies
+void automatischeFuncties(int coordinaat){
+  gaNaarCoordinaat(coordinaat);
+  //Aangekomen op coordinaat? geef door naar Arduino 2
+  if(YasAangekomen && XasAangekomen){
+    productOppakken();
+    if(!ZasUitgeschoven && YomhoogOmOpTePakken){
+      productOpgepakt = true;
+    }
+  }
+}
+
 //beweeg naar de coordinaat
 void gaNaarCoordinaat(int coordinaatIndex){
   //*Xas
@@ -291,17 +305,20 @@ void gaNaarCoordinaat(int coordinaatIndex){
     //stop
     else{
       analogWrite(pwmB, 0);
-      analogWrite(brakeB, 1);
+      analogWrite(brakeB, 1); //!Werkte niet
       YasAangekomen = true;
     }
   }
 }
 
-void yAsOmhoog(){
+//Pak product op, werkt obv input Arduino 2
+void productOppakken(){
   eenNaarTwee.setCharAt(1, 49); //Set aangekomen op 1
   if(ZasUitgeschoven){
+    //Y-as 100 pulsen omhoog laten bewegen wanneer Zas is uitgeschoven
     int tempYencoder = Yencoder + 100;
     while(Yencoder < tempYencoder && !YomhoogOmOpTePakken){
+      //Voor veiligheid moeten sensoren blijven lezen en blijven lezen van Arduino 2
       functiesSensoren();
       serialRead();
       moveY(Boven, snelheid);
@@ -312,19 +329,9 @@ void yAsOmhoog(){
   }
 }
 
-void automatischeFuncties(int coordinaat){
-  gaNaarCoordinaat(coordinaat);
-  //Aangekomen op coordinaat? geef door naar Arduino 2
-  if(YasAangekomen && XasAangekomen){
-    yAsOmhoog();
-    if(!ZasUitgeschoven && YomhoogOmOpTePakken){
-      productOpgepakt = true;
-    }
-  }
-}
-
 //lees de Xencoder
 void XleesEncoder() {
+  //Afhangend van de richting dat de motor opgaat, encoder meer of minder maken
   if (digitalRead(XrichtingPin) == 1) {
     Xencoder++;
   } else {
@@ -373,8 +380,6 @@ void geefRichting() {
   if (richting == "") {
     richting += "0";
   }
-
-  //Serial.println(richting);
 }
 
 //Beweeg motoren in richting
@@ -446,13 +451,13 @@ void functiesSensoren(){
 }
 
 //Lees de status van de microswitches op de Yas
-unsigned long previousMillis = 0; // Variabele om de tijd bij te houden van de laatste keer dat de microswitches zijn gelezen
-const unsigned long interval = 300; // Interval van 300 milliseconden
+//Variabelen voor tijd tussen checks
+unsigned long previousMillis = 0;
+const unsigned long interval = 300;
 void leesMicroSwitches(){
-  // Haal de huidige tijd op
   unsigned long currentMillis = millis();
   
-  // Controleer of er 100 milliseconden zijn verstreken sinds de laatste keer dat de microswitches zijn gelezen
+  // Controleer of er *interval* milliseconden zijn verstreken sinds de laatste keer dat de microswitches zijn gelezen
   if (currentMillis - previousMillis >= interval) {
     // Reset de timer
     previousMillis = currentMillis;
@@ -462,52 +467,45 @@ void leesMicroSwitches(){
     bool switch2State = digitalRead(msBoven);
     
     // Controleer of een van de schakelaars geactiveerd is
-    // Print naar de seriÃ«le monitor welke schakelaar is ingedrukt
     if (switch1State == HIGH) {
-      // Serial.println("Switch beneden is ingedrukt!");
       drukSwitchBeneden = true;
-      eenNaarTwee.setCharAt(2, 49); //Set getal 1
+      eenNaarTwee.setCharAt(2, 49); //Set getal 1, geef door dat Y-encoder moet resetten
     }
     if (switch2State == HIGH) {
-      // Serial.println("Switch boven is ingedrukt!");
       drukSwitchBoven = true; 
     }
     if (switch1State == LOW && switch2State == LOW) {
-     //Serial.println("testmicro");
       drukSwitchBoven = false;
       drukSwitchBeneden = false;
-      eenNaarTwee.setCharAt(2, 48); //Set getal 0
+      eenNaarTwee.setCharAt(2, 48); //Set getal 0, geef door dat Y-encoder niet meer moet resetten
     }
   }
 }
 
 //Lees de status van de inductieve sensoren op de Xas
-unsigned long previousMillis2 = 0; // Variabele om de tijd bij te houden van de laatste keer dat de microswitches zijn gelezen
-const unsigned long interval2 = 300; // Interval van 300 milliseconden
+//Variabelen voor tijd tussen checks
+unsigned long previousMillis2 = 0;
+const unsigned long interval2 = 300;
 void leesInductiveSensoren(){
-  unsigned long currentMillis = millis(); // Haal de huidige tijd op
+  unsigned long currentMillis = millis();
 
-  // Controleer of er 100 milliseconden zijn verstreken sinds de laatste keer dat de microswitches zijn gelezen
+  // Controleer of er *interval* milliseconden zijn verstreken sinds de laatste keer dat de microswitches zijn gelezen
   if (currentMillis - previousMillis2 >= interval2) {
-    previousMillis2 = currentMillis; // Reset de timer
+    previousMillis2 = currentMillis;
     
     // Lees de status van de schakelaars
     bool indLinksState = digitalRead(indLinks);
     bool indRechtsState = digitalRead(indRechts);
   
     // Controleer of een van de schakelaars geactiveerd is
-    // Print naar de seriele monitor welke schakelaar is ingedrukt
     if (indLinksState == LOW) {
-      // Serial.println("Nabijheid gedetecteerd aan de linkerkant");
       metaalLinks = true;
       Xencoder = 0; //Xas bevind zich bij nulpunt, reset encoder
     }
     if (indRechtsState == LOW) {
-      // Serial.println("Nabijheid gedetecteerd aan de rechterkant");
       metaalRechts = true;
     } 
     if (indLinksState == HIGH && indRechtsState == HIGH) {
-    //Serial.println("testmetaal");
       metaalLinks = false;
       metaalRechts = false;
     }
